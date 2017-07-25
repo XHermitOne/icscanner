@@ -18,7 +18,7 @@ from ic import config
 from . import scanner_dlg_proto
 from . import scan_manager
 
-__version__ = (0, 1, 3, 6)
+__version__ = (0, 1, 3, 7)
 
 
 class icScanOptions:
@@ -307,7 +307,7 @@ class icScanAdministrator(icScanOptions):
             scan_filenames = self.scan_manager.scan_pack(scan_filenames=scans)
 
             # Перенос отсканированных файлов в результирующую папку
-            if self.scan_dir:
+            if self.scan_dir and os.path.exists(self.scan_dir):
                 for scan_filename in scan_filenames:
                     if scan_filename and os.path.exists(scan_filename):
                         log.debug(u'Перенос файла <%s> в результирующую папку <%s>' % (scan_filename, self.scan_dir))
