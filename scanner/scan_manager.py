@@ -22,6 +22,7 @@ sudo apt-get install python-reportlab
 ***************************************
 """
 
+import traceback
 import os
 import os.path
 import sane
@@ -31,7 +32,7 @@ from ic.std.log import log
 from ic.std.utils import ic_file
 from ic import config
 
-__version__ = (0, 0, 3, 3)
+__version__ = (0, 0, 4, 1)
 
 # Режимы сканирования
 GREY_SCAN_MODE = 'Grey'
@@ -87,6 +88,9 @@ SCAN_OPTIONS_ORDER = ('source', 'mode', 'depth',
 # Размер сканированной страницы в точках по умолчанию
 # Значения определены экспериментальным путем
 DEFAULT_IMAGE_PAGE_SIZE = (4961, 7016)
+
+# Сообщение об ошибке при застревании документа в лотке подачи
+DOC_FEEDER_JAMMED_ERR = 'error: Document feeder jammed'
 
 
 class icScanManager(object):
@@ -291,6 +295,12 @@ class icScanManager(object):
             return image
         except:
             log.fatal(u'Ошибка сканирования')
+
+            # Так отображаем ошибки сканирования
+            trace_txt = traceback.format_exc()
+            if DOC_FEEDER_JAMMED_ERR in trace_txt:
+                self.show_scan_error_msg(u'Застревание документа в лотке подачи бумаги')
+
         return None
 
     def singleScan(self, scan_filename=None):
@@ -395,7 +405,36 @@ class icScanManager(object):
             return True
         except:
             log.fatal(u'Ошибка многостраничного сканирования')
+
+            # Так отображаем ошибки сканирования
+            trace_txt = traceback.format_exc()
+            if DOC_FEEDER_JAMMED_ERR in trace_txt:
+                self.show_scan_error_msg(u'Застревание документа в лотке подачи бумаги')
+
         return False
+
+    def show_scan_error_msg(self, err_msg=u''):
+        """
+        Функция отображения ошибок сканирования.
+        @param err_msg: Сообщение об ошибке.
+        """
+        log.error(u'ОШИБКА СКАНИРОВАНИЯ. %s' % err_msg)
+
+        try:
+            import wx
+            from ic.std.dlg import dlg
+
+            app = wx.GetApp()
+            if not app:
+                app = wx.PySimpleApp()
+                dlg.getErrBox(u'ОШИБКА СКАНИРОВАНИЯ', err_msg, parent=None)
+                app.MainLoop()
+            else:
+                dlg.getErrBox(u'ОШИБКА СКАНИРОВАНИЯ', err_msg, parent=app.GetTopWindow())
+        except:
+            # Если не отобразим сообщение об ошибке, то процесс
+            # сканирования не должен остановиться
+            log.fatal(u'Ошибка в функиции <show_scan_error_msg> менеджера сканирования')
 
     def scan_pack(self, scan_filenames=()):
         """
