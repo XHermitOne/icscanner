@@ -31,7 +31,7 @@ from ic.std.log import log
 from ic.std.utils import ic_file
 from ic import config
 
-__version__ = (0, 0, 3, 1)
+__version__ = (0, 0, 3, 3)
 
 # Режимы сканирования
 GREY_SCAN_MODE = 'Grey'
@@ -301,8 +301,7 @@ class icScanManager(object):
         @param scan_filename: Имя файла скана.
             Если имя файла не указано, то происходит сканирование и
             возвращается объект PIL.Image.
-        @return: Имя файла скана или объект PIL.Image.
-            None - в случае ошибки.
+        @return: True - все прошло успешно. False - ошибка.
         """
         if self.isDuplexOption():
             # Если вкл. ДУПЛЕКС и выключено многостраничное сканирование,
@@ -312,75 +311,8 @@ class icScanManager(object):
         # Сканирование одной страницы
         log.debug(u'Одностороннее сканирование')
         self.startScan()
-        return self.scan(scan_filename)
-
-    def multiScan_depricated(self, scan_filename=None, n_page=-1):
-        """
-        Многостраничное сканирование.
-        ВНИМАНИЕ! у этой версии функции при достижении сканирования 21 страницы
-        возникает исключение MemoryError.
-        @param scan_filename: Имя файла скана.
-            Многостраничное сканирование производится в PDF файл.
-            В функции происходит проверка на расширение имени файла.
-            Если имя файла не указано, то берется имя файла по умолчанию.
-            ~/.icscanner/scan.pdf
-        @param n_page: Количество сканируемых страниц.
-            Если -1, то сканируются все возможные страницы.
-        @return: True - все прошло успешно. False - ошибка.
-        """
-        if scan_filename is None:
-            scan_filename = DEFAULT_PDF_SCAN_FILENAME
-
-        file_ext = os.path.splitext(scan_filename)[1]
-        if file_ext.lower() != '.pdf':
-            log.warning(u'Не корректный тип файла для сохранения результата многостраничного сканирования')
-            return False
-
-        try:
-            scan = self.scan_device_obj.multi_scan()
-            images = list()
-
-            if n_page < 0:
-                # Сканирование всех возможных страниц
-                is_stop_scan = False
-                while not is_stop_scan:
-                    try:
-                        image = scan.next()
-                    except StopIteration:
-                        is_stop_scan = True
-                        continue
-                    images.append(image)
-            else:
-                # Сканирование определенное кол-во страниц
-                for i_page in range(n_page):
-                    try:
-                        image = scan.next()
-                    except StopIteration:
-                        continue
-                    images.append(image)
-
-            if images:
-                page_size = images[0].size
-            else:
-                # Нет страниц - нет вывода в файл
-                log.warning(u'Нет сканированных страниц для записи в PDF файл <%s>' % scan_filename)
-                return False
-
-            scan_canvas = canvas.Canvas(scan_filename, pagesize=page_size)
-            width, height = page_size
-
-            for i, image in enumerate(images):
-                img_filename = os.path.join(ic_file.getHomeDir(),
-                                            MULTISCAN_PAGE_FILENAME % i)
-                image = image.resize((int(width), int(height)))
-                image.save(img_filename)
-                scan_canvas.drawImage(img_filename, 0, 0)
-                scan_canvas.showPage()
-            scan_canvas.save()
-            return True
-        except:
-            log.fatal(u'Ошибка многостраничного сканирования')
-        return False
+        scan_obj = self.scan(scan_filename)
+        return scan_obj is not None
 
     def _imageDrawCanvas(self, image, canvas, n, page_size=DEFAULT_IMAGE_PAGE_SIZE):
         """
@@ -472,17 +404,18 @@ class icScanManager(object):
             и признаком 2-стороннего сканирования.
             Например:
                 ('D:/tmp/scan001', 3, True), ('D:/tmp/scan002', 1, False), ('D:/tmp/scn003', 2, True), ...
-        @return: Список имен файлов скана или объектов PIL.Image.
-            None - в случае ошибки.
+        @return: Список имен файлов скана. None - в случае ошибки.
         """
         result = list()
         for scan_filename, n_pages, is_duplex in scan_filenames:
             # Вкл./Выкл. 2-стороннее сканирование
             self.setDuplexOption(is_duplex)
             if n_pages == 1:
-                result.append(self.singleScan(scan_filename))
+                scan_result = self.singleScan(scan_filename)
+                result.append(scan_filename if scan_result and os.path.exists(scan_filename) else None)
             elif n_pages > 1:
-                result.append(self.multiScan(scan_filename, n_pages))
+                scan_result = self.multiScan(scan_filename, n_pages)
+                result.append(scan_filename if scan_result and os.path.exists(scan_filename) else None)
             else:
                 log.warning(u'Не корректное количество страниц <%s> в пакетном режиме сканирования' % n_pages)
         return result
