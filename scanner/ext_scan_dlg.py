@@ -14,7 +14,7 @@ from ic.std.utils import execfunc
 from ic.std.utils import pdf_func
 from . import scanner_dlg_proto
 
-__version__ = (0, 0, 0, 1)
+__version__ = (0, 0, 1, 4)
 
 
 class icLoadSheetsDialog(scanner_dlg_proto.icLoadSheetsDlgProto):
@@ -35,6 +35,7 @@ class icLoadSheetsDialog(scanner_dlg_proto.icLoadSheetsDlgProto):
         @param max_sheets: Максимальное возможное количество листов для сканирования.
         """
         self.sheets_spinCtrl.SetRange(1, max_sheets)
+        self.sheets_spinCtrl.SetValue(max_sheets)
 
     def getSheets(self):
         """
@@ -49,6 +50,14 @@ class icLoadSheetsDialog(scanner_dlg_proto.icLoadSheetsDlgProto):
         """
         self.real_sheet = self.sheets_spinCtrl.GetValue()
         self.EndModal(wx.ID_OK)
+        event.Skip()
+
+    def onCancelButtonClick(self, event):
+        """
+        Обработчик кнопки <Отмена>.
+        """
+        self.real_sheet = -1
+        self.EndModal(wx.ID_CANCEL)
         event.Skip()
 
 
@@ -92,6 +101,13 @@ class icVerifyScanDialog(scanner_dlg_proto.icVerifyScanDlgProto):
         self.EndModal(wx.ID_OK)
         event.Skip()
 
+    def onCancelButtonClick(self, event):
+        """
+        Обработчик кнопки <Отмена>.
+        """
+        self.EndModal(wx.ID_CANCEL)
+        event.Skip()
+
 
 def scan_glue_load_sheets(parent=None, max_sheets=60):
     """
@@ -99,7 +115,7 @@ def scan_glue_load_sheets(parent=None, max_sheets=60):
     @param parent: Родительское окно.
     @param max_sheets: Максимально допустимое количество листов в лотке для сканирования.
     @return: Количество листов выбранных пользователем для сканированния.
-        Либо -1, если просто ничего не выбрано.
+        Либо -1, если просто ничего не выбрано или нажата <Отмена>.
     """
     dlg = icLoadSheetsDialog(parent=parent)
     dlg.setMaxSheets(max_sheets)
@@ -145,9 +161,10 @@ def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tr
     new_scan_filename = scan_file_path + part_suffix + scan_file_ext
     sheets = scan_glue_load_sheets(None, min(max_tray_sheets, n_pages))
     scan_sheet_count = sheets
-    is_cancel = False
+    is_cancel = scan_sheet_count <= 0
 
-    while 0 < scan_sheet_count <= n_pages:
+    while (0 < scan_sheet_count <= n_pages) or is_cancel:
+        log.debug(u'Сканирование файла <%s> Сканировать листов [%d]' % (new_scan_filename, sheets))
         scan_result = scan_manager.multiScan(new_scan_filename, sheets)
         if scan_result and os.path.exists(new_scan_filename):
             verify_result = scan_glue_verify(None, new_scan_filename)
@@ -155,11 +172,24 @@ def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tr
                 n_part += 1
                 part_suffix = '_part%03d' % n_part
                 new_scan_filename = scan_file_path + part_suffix + scan_file_ext
-                sheets = scan_glue_load_sheets(None,
-                                               min(max_tray_sheets, n_pages-scan_sheet_count))
+                do_scan_sheet_count =  min(max_tray_sheets, n_pages-scan_sheet_count)
+                if do_scan_sheet_count <= 0:
+                    # Все листы отсканированны
+                    break
+                sheets = scan_glue_load_sheets(None, do_scan_sheet_count)
+                if sheets <= 0:
+                    # Нажата <Отмена>
+                    is_cancel = True
+                    break
                 scan_sheet_count += sheets
             elif verify_result is None:
+                scan_sheet_count -= sheets
                 sheets = scan_glue_load_sheets(None, min(max_tray_sheets, n_pages))
+                if sheets <= 0:
+                    # Нажата <Отмена>
+                    is_cancel = True
+                    break
+                scan_sheet_count += sheets
             else:
                 is_cancel = True
                 log.warning(u'Сканирование по частям файла <%s> отменено' % new_scan_filename)
@@ -170,7 +200,7 @@ def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tr
 
     # Склеить отсканированные части документа
     if not is_cancel:
-        part_pdf_filenames = [scan_file_path + '_part%03d' % i_part + scan_file_ext for i_part in range(n_part + 1, 1, 1)]
+        part_pdf_filenames = [scan_file_path + '_part%03d' % i_part + scan_file_ext for i_part in range(n_part, 1, 1)]
         glue_result = pdf_func.glue_pdf_files(scan_filename, *part_pdf_filenames)
         return glue_result
 

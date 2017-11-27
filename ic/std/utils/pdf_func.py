@@ -171,7 +171,7 @@ import PyPDF2
 
 from ic.std.log import log
 
-__version__ = (0, 0, 0, 1)
+__version__ = (0, 0, 1, 2)
 
 
 def glue_pdf_files(out_pdf_filename, *pdf_filenames):
@@ -189,6 +189,7 @@ def glue_pdf_files(out_pdf_filename, *pdf_filenames):
                      if filename.lower().endswith('.pdf') and os.path.exists(filename)]
         for filename in filenames:
             pdf_file = open(filename, 'rb')
+            log.debug(u'Объединение PDF файла <%s> => <%s>' % (out_pdf_filename, filename))
             reader = PyPDF2.PdfFileReader(pdf_file)
             merger.append(reader)
 

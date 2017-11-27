@@ -35,7 +35,7 @@ from ic import config
 
 from . import ext_scan_dlg
 
-__version__ = (0, 1, 1, 1)
+__version__ = (0, 1, 1, 4)
 
 # Режимы сканирования
 GREY_SCAN_MODE = 'Grey'
@@ -159,8 +159,12 @@ class icScanManager(object):
         @param device_name: Имя устройства сканирования.
         @return: Объект устройства сканирования.
         """
-        self.scan_device_obj = sane.open(device_name)
-        self.init_options_order()
+        try:
+            self.scan_device_obj = sane.open(device_name)
+            self.init_options_order()
+        except:
+            log.fatal(u'Ошибка открытия устройства сканирования <%s>' % device_name)
+            self.scan_device_obj = None
         return self.scan_device_obj
 
     def close(self):
@@ -486,10 +490,14 @@ class icScanManager(object):
 
                 # Если в лотке кончилась бумага, то надо запустить процедуру склейки последнего
                 # документа
-                self.scan_glue(scan_filename, n_pages, is_duplex)
+                glue_result = self.scan_glue(scan_filename, n_pages, is_duplex)
+                # М.б. нажата <Отмена> или какая то ошибка
+                result.append(scan_filename if glue_result and os.path.exists(scan_filename) else None)
 
-        if wx_app:
-            wx_app.MainLoop()
+        # ВНИМАНИЕ! Т.к. взаимодействие построено на модальных диалоговых
+        # окнах, то MainLoop делать не надо иначе основное приложение зависает
+        # if wx_app:
+        #    wx_app.MainLoop()
 
         return result
 
