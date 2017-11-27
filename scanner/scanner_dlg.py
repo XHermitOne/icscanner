@@ -13,12 +13,13 @@ import wx
 from ic.std.log import log
 from ic.std.utils import ic_ini
 from ic.std.utils import ic_file
+from ic.std.utils import execfunc
 from ic.std.dlg import dlg
 from ic import config
 from . import scanner_dlg_proto
 from . import scan_manager
 
-__version__ = (0, 1, 3, 7)
+__version__ = (0, 2, 1, 1)
 
 
 class icScanOptions:
@@ -235,11 +236,26 @@ class icScanAdministrator(icScanOptions):
             log.fatal(u'Ошибка сканирования')
         return False
 
+    def pages2sheets(self, page_count, is_duplex=False):
+        """
+        Перевод количества страниц в количество листов.
+        @param page_count: Количество страниц.
+        @param is_duplex: Двустороннее сканирование?
+        @return: Количество листов.
+        """
+        if not is_duplex:
+            # Если нет двустороннего сканирования,
+            # то количество страниц совпадает с количеством листов
+            return page_count
+        else:
+            # При двустороннем сканировании:
+            return page_count / 2
+
     def runScanPack(self, *scan_filenames):
         """
         Запусть процесс сканирования в режиме пакетной обработки,
         согласно выставленным параметрам.
-        @param scan_filenames: Имена файлов скана с указанием количества страниц
+        @param scan_filenames: Имена файлов скана с указанием количества листов
             и признака 2-стороннего сканирования.
             Например:
                 (scan001, 3, True), (scan002, 1, False), (scn003, 2, True), ...
@@ -393,21 +409,7 @@ class icScanAdministrator(icScanOptions):
             scan_filename = os.path.join(self.scan_dir if self.scan_dir else config.PROFILE_PATH,
                                          os.path.basename(scan_filename))
 
-        if not os.path.exists(scan_filename):
-            log.warning(u'Просмотр результатов сканирования. Файл <%s> не наден.' % scan_filename)
-            return False
-        file_type = os.path.splitext(scan_filename)[1]
-        if file_type.lower() == '.pdf':
-            # PDF файлы просмоатриваем evince
-            cmd = 'evince %s&' % scan_filename
-            log.debug(u'Запуск комманды <%s>' % cmd)
-            os.system(cmd)
-        else:
-            # Все остальные файлы считаем картинками
-            cmd = 'eog %s&' % scan_filename
-            log.debug(u'Запуск комманды <%s>' % cmd)
-            os.system(cmd)
-        return True
+        return execfunc.view_file_ext(scan_filename)
 
 
 class icScannerDlg(scanner_dlg_proto.icScannerDlgProto,

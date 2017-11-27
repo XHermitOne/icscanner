@@ -39,6 +39,9 @@ DEFAULT_SCAN_FILENAME = os.path.join(os.environ.get('HOME', os.path.dirname(__fi
 
 DEFAULT_EXT_SCAN_PRG = 'gscan2pdf&'
 
+# Максимальное количество листов, помещаемых в лоток сканера по умолчанию
+DEFAULT_SCANNER_MAX_SHEETS = 60
+
 
 def get_glob_var(name):
     """

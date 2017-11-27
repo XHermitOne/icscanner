@@ -53,6 +53,7 @@ icScanner - Программа запуска сканирования доку�
                             есть 2-х стороннее сканирование или нет.
                             Например: 2/1 - 2 листа с двух сторон
                             3/0 - 3 листа с одной стороны
+        --max_sheets=       Ограничение количества листов в лотке сканнера
 """
 
 import sys
@@ -65,7 +66,7 @@ from scanner import scanner_dlg
 from scanner import scan_manager
 
 
-__version__ = (0, 1, 2, 4)
+__version__ = (0, 2, 1, 1)
 
 
 def main(argv):
@@ -83,7 +84,8 @@ def main(argv):
                                        'scan_dir=',
                                        'file_name=', 'file_type=',
                                        'ext_cmd=',
-                                       'pack_mode', 'pack_pages='])
+                                       'pack_mode', 'pack_pages=',
+                                       'glue', 'max_sheets='])
     except getopt.error, msg:
         print(msg)
         print('For help use --help option')
@@ -142,6 +144,8 @@ def main(argv):
             cmd_options['pack_mode'] = True
         elif option in ('--pack_pages',):
             cmd_options['pack_pages'] = arg
+        elif option in ('--max_sheets',):
+            config.set_glob_var('DEFAULT_SCANNER_MAX_SHEETS', int(arg))
         else:
             log.warning(u'Не обрабатываемый параметр коммандной строки <%s>' % option)
 
@@ -162,6 +166,7 @@ def main(argv):
         app.MainLoop()
     else:
         # В пакетном режиме не используем диалоговое окно
+        # Но в случае режима склеивания документа по частям диалоговые окна используются
         filenames = cmd_options.get('scan_filename', u'').split(';')
         pack_page_list = cmd_options.get('pack_pages', u'').split(';')
         n_pages = [int(pack_page.split('/')[0]) if '/' in pack_page else int(pack_page) for pack_page in pack_page_list]

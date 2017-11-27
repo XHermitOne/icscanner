@@ -10,7 +10,7 @@ import sys
 import imp
 from ic.std.log import log
 
-__versiom__ = (0, 0, 0, 2)
+__versiom__ = (0, 0, 1, 1)
 
 
 def loadSource(name, path):
@@ -112,4 +112,32 @@ def exec_code(sCode='', bReImport=False, name_space=None, kwargs=None):
         raise
 
     return result
+
+
+# Словарь ассоциаций вызова внешних просмотрщиков по расширению файла
+ASSOCIATION_VIEW_FILE = {
+    ('.pdf',): 'evince %s&',
+    ('.jpg', '.jpeg', '.bmp', '.tiff', '.png'): 'eog %s&',
+}
+
+
+def view_file_ext(filename):
+    """
+    Запуск просмотра файла внешней программой.
+    Определение какой программой производить просмотр определяется по расширению файла.
+    @param filename: Полное имя файла.
+    @return: True/False.
+    """
+    if not os.path.exists(filename):
+        log.warning(u'Просмотр файла внешней программой. Файл <%s> не наден.' % filename)
+        return False
+    file_type = os.path.splitext(filename)[1]
+    file_ext = file_type.lower()
+
+    for file_extensions, view_cmd_associate in ASSOCIATION_VIEW_FILE.items():
+        if file_ext in file_extensions:
+            cmd = view_cmd_associate % filename
+            log.debug(u'Запуск комманды <%s>' % cmd)
+            os.system(cmd)
+    return True
 
