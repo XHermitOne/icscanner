@@ -5,11 +5,17 @@ import time
 import random
 import md5
 
-from ic.std.log import log
+try:
+    from ic.std.log import log
+except ImportError:
+    from ic.log import log
+
 try:
     import pythoncom
-except:
+except ImportError:
     log.error(u'Import Error pythoncom')
+
+__version__ = (0, 0, 2, 1)
 
 
 def get_uuid(*args):
@@ -47,8 +53,8 @@ if __name__ == '__main__':
     t1 = time.clock()
     
     for i in range(10):
-        print((get_uuid_attr(get_uuid(), *('keyDown', 'a', 5))))
+        print(get_uuid_attr(get_uuid(), *('keyDown', 'a', 5)))
 
     t2 = time.clock()        
     
-    print((u'>>> Time: %s' % (t2-t1)))
+    print(u'>>> Time: %s' % (t2-t1))

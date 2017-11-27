@@ -169,9 +169,12 @@ import os
 import os.path
 import PyPDF2
 
-from ic.std.log import log
+try:
+    from ic.std.log import log
+except ImportError:
+    from ic.log import log
 
-__version__ = (0, 0, 1, 2)
+__version__ = (0, 0, 1, 3)
 
 
 def glue_pdf_files(out_pdf_filename, *pdf_filenames):
@@ -189,12 +192,33 @@ def glue_pdf_files(out_pdf_filename, *pdf_filenames):
                      if filename.lower().endswith('.pdf') and os.path.exists(filename)]
         for filename in filenames:
             pdf_file = open(filename, 'rb')
-            log.debug(u'Объединение PDF файла <%s> => <%s>' % (out_pdf_filename, filename))
+            log.debug(u'Объединение PDF файла <%s> => <%s>' % (filename, out_pdf_filename))
             reader = PyPDF2.PdfFileReader(pdf_file)
             merger.append(reader)
 
+        out_pdf_filename = os.path.abspath(out_pdf_filename)
+        if os.path.exists(out_pdf_filename):
+            log.info(u'Удаление файла <%s>' % out_pdf_filename)
+            try:
+                os.remove(out_pdf_filename)
+            except:
+                log.fatal(u'Ошибка удаления файла <%s>' % out_pdf_filename)
+        log.debug(u'Запись результирующего файла <%s>' % out_pdf_filename)
         merger.write(out_pdf_filename)
         return True
     except:
         log.fatal(u'Ошибка склеивания/объединения PDF файлов')
     return False
+
+
+def test_glue_pdf_files():
+    """
+    Тестовая функция.
+    """
+    return glue_pdf_files('../../../tst/all.pdf',
+                          '../../../tst/1.pdf',
+                          '../../../tst/2.pdf')
+
+
+if __name__ == '__main__':
+    test_glue_pdf_files()
