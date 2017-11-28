@@ -10,11 +10,12 @@ import os.path
 import wx
 
 from ic.std.log import log
+from ic.std.dlg import dlg
 from ic.std.utils import execfunc
 from ic.std.utils import pdf_func
 from . import scanner_dlg_proto
 
-__version__ = (0, 0, 1, 4)
+__version__ = (0, 0, 1, 5)
 
 
 class icLoadSheetsDialog(scanner_dlg_proto.icLoadSheetsDlgProto):
@@ -200,8 +201,14 @@ def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tr
 
     # Склеить отсканированные части документа
     if not is_cancel:
-        part_pdf_filenames = [scan_file_path + '_part%03d' % i_part + scan_file_ext for i_part in range(n_part, 1, 1)]
+        part_pdf_filenames = [scan_file_path + ('_part%03d' % i_part) + scan_file_ext for i_part in range(1, n_part)]
+        log.debug(u'Объединение %d частей скана %s в PDF файл %s' % (n_part-1, part_pdf_filenames, scan_filename))
         glue_result = pdf_func.glue_pdf_files(scan_filename, *part_pdf_filenames)
+        
+        dlg.getMsgBox(u'СКАНИРОВАНИЕ', 
+                      u'Загрузите в лоток сканера документы для последующего сканирования')
         return glue_result
+    else:
+        log.warning(u'Режим объединения сканированного документа по частям отменен')
 
     return False

@@ -494,6 +494,10 @@ class icScanManager(object):
                 # М.б. нажата <Отмена> или какая то ошибка
                 result.append(scan_filename if glue_result and os.path.exists(scan_filename) else None)
 
+                # ВНИМАНИЕ! После успешно отсканированного большого документа
+                # сбрасываем счетчик отсканированных листов
+                tray_sheet_count = 0
+
         # ВНИМАНИЕ! Т.к. взаимодействие построено на модальных диалоговых
         # окнах, то MainLoop делать не надо иначе основное приложение зависает
         # if wx_app:

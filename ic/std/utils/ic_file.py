@@ -68,12 +68,8 @@ except:
 from . import ic_codecs
 from . import util
 
-try:
-    import services.ic_std.ic_run.ic_user
-except:
-    log.error(u'Import Error in ic_std.ic_run.ic_user')
 
-__version__ = (0, 0, 1, 3)
+__version__ = (0, 0, 1, 4)
 
 
 # --- Функции пользователя ---
