@@ -15,7 +15,7 @@ from ic.std.utils import execfunc
 from ic.std.utils import pdf_func
 from . import scanner_dlg_proto
 
-__version__ = (0, 0, 1, 5)
+__version__ = (0, 0, 1, 7)
 
 
 class icLoadSheetsDialog(scanner_dlg_proto.icLoadSheetsDlgProto):
@@ -145,12 +145,12 @@ def scan_glue_verify(parent=None, verify_filename=None):
     return False
 
 
-def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tray_sheets=60):
+def scan_glue_mode(scan_manager, scan_filename, n_sheets, is_duplex=False, max_tray_sheets=60):
     """
     Запуск режима склеивания документа по частям.
     @param scan_manager: Менеджер сканирования.
     @param scan_filename: Имя результирующего файла скана.
-    @param n_pages: Количество листов.
+    @param n_sheets: Количество листов.
     @param is_duplex: Двустороннее сканирование?
     @param max_tray_sheets: Максимально допустимое количество листов в лотке сканера.
     @return: True/False.
@@ -160,20 +160,23 @@ def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tr
     scan_file_path, scan_file_ext = os.path.splitext(scan_filename)
     part_suffix = '_part%03d' % n_part
     new_scan_filename = scan_file_path + part_suffix + scan_file_ext
-    sheets = scan_glue_load_sheets(None, min(max_tray_sheets, n_pages))
+    sheets = scan_glue_load_sheets(None, min(max_tray_sheets, n_sheets))
     scan_sheet_count = sheets
     is_cancel = scan_sheet_count <= 0
 
-    while (0 < scan_sheet_count <= n_pages) or is_cancel:
+    while (0 < scan_sheet_count <= n_sheets) or is_cancel:
         log.debug(u'Сканирование файла <%s> Сканировать листов [%d]' % (new_scan_filename, sheets))
-        scan_result = scan_manager.multiScan(new_scan_filename, sheets)
+        # Если используется дуплекс, то надо увеличить количество страниц
+        scan_n_pages = sheets * 2 if is_duplex else sheets
+        # Запуск процесса сканирования
+        scan_result = scan_manager.multiScan(new_scan_filename, scan_n_pages)
         if scan_result and os.path.exists(new_scan_filename):
             verify_result = scan_glue_verify(None, new_scan_filename)
             if verify_result:
                 n_part += 1
                 part_suffix = '_part%03d' % n_part
                 new_scan_filename = scan_file_path + part_suffix + scan_file_ext
-                do_scan_sheet_count =  min(max_tray_sheets, n_pages-scan_sheet_count)
+                do_scan_sheet_count =  min(max_tray_sheets, n_sheets-scan_sheet_count)
                 if do_scan_sheet_count <= 0:
                     # Все листы отсканированны
                     break
@@ -185,7 +188,7 @@ def scan_glue_mode(scan_manager, scan_filename, n_pages, is_duplex=False, max_tr
                 scan_sheet_count += sheets
             elif verify_result is None:
                 scan_sheet_count -= sheets
-                sheets = scan_glue_load_sheets(None, min(max_tray_sheets, n_pages))
+                sheets = scan_glue_load_sheets(None, min(max_tray_sheets, n_sheets))
                 if sheets <= 0:
                     # Нажата <Отмена>
                     is_cancel = True

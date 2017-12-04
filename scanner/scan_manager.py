@@ -35,7 +35,7 @@ from ic import config
 
 from . import ext_scan_dlg
 
-__version__ = (0, 1, 1, 4)
+__version__ = (0, 1, 1, 6)
 
 # Режимы сканирования
 GREY_SCAN_MODE = 'Grey'
@@ -470,7 +470,7 @@ class icScanManager(object):
         wx_app = None
 
         for scan_filename, n_pages, is_duplex in scan_filenames:
-            tray_sheet_count += n_pages
+            tray_sheet_count += n_pages if not is_duplex else n_pages/2
 
             if tray_sheet_count <= max_sheets:
                 # Пока счетчик сканирования не превысил ограничение объема лотка,
@@ -478,6 +478,7 @@ class icScanManager(object):
                 scan_result = self.scan_pack_part(scan_filename, n_pages, is_duplex)
                 result.append(scan_filename if scan_result and os.path.exists(scan_filename) else None)
             else:
+                log.debug(u'Включение режима сканирования документа <%s> по частям. Количество страниц [%d] Текущий счетчик %d. ' % (scan_filename, n_pages, tray_sheet_count))
                 if wx_app is None:
                     # Внимание! Приложение создается для
                     # управления диалоговыми окнами
@@ -529,11 +530,14 @@ class icScanManager(object):
         """
         Запуск режима склеивания документа из частей.
         @param scan_filename: Имя результирующего файла скана.
-        @param n_pages: Количество листов.
+        @param n_pages: Количество страниц.
         @param is_duplex: Двустороннее сканирование?
         @return: True/False.
         """
-        return ext_scan_dlg.scan_glue_mode(self, scan_filename, n_pages, is_duplex,
+        # Вкл./Выкл. 2-стороннее сканирование
+        self.setDuplexOption(is_duplex)
+        n_sheets = n_pages/2 if is_duplex else n_pages
+        return ext_scan_dlg.scan_glue_mode(self, scan_filename, n_sheets, is_duplex,
                                            self.getMaxSheets())
 
 
