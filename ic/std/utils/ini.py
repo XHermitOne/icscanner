@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -8,23 +8,25 @@ CFG файлы - простые файлы настроек
 
 ВНИМАНИЕ! В INI файл имена параметров записываются в нижнем регистре
 а имена секций в верхнем
-
 """
 
+import os
 import os.path
+import shutil
 import re
 
+from ..log import log
+
 try:
-    import ConfigParser
-except:
-    print(u'ERROR! Import error ConfigParser module')
+    import configparser
+except ImportError:
+    log.error('Ошибка импорта configparser', bForcePrint=True)
 
-
-__version__ = (0, 0, 1, 2)
-
+__version__ = (0, 1, 1, 1)
 
 CFG_FILE_EXT = '.cfg'
 INI_FILE_EXT = '.ini'
+DEFAULT_ENCODE = 'utf-8'
 
 
 def loadParamCFG(sCFGFileName, sParamName):
@@ -40,7 +42,7 @@ def loadParamCFG(sCFGFileName, sParamName):
     cfg_file = None
     try:
         param = None
-        cfg_file = open(sCFGFileName, 'r')
+        cfg_file = open(sCFGFileName, 'rt')
         row = None  # Текущая считанная из файла строка
         while row != '':
             row = cfg_file.readline()
@@ -56,15 +58,15 @@ def loadParamCFG(sCFGFileName, sParamName):
     except:
         if cfg_file:
             cfg_file.close()
-        print((u'ERROR! Error load param %s from CFG file %s' % (sParamName, sCFGFileName)))
-        raise
+        log.fatal(u'Ошибка загрузки параметра [%s] из CFG файла <%s>' % (sParamName, sCFGFileName))
+    return None
 
 
 def saveParamCFG(sCFGFileName, sParamName, vParamValue):
     """
     Запись параметра в файл настроек.
     @type sCFGFileName: C{string}
-    @param sCFGFileName_: Полное имя файла настроек.
+    @param sCFGFileName: Полное имя файла настроек.
     @type sParamName: C{string}
     @param sParamName: Имя параметра.
     @param vParamValue: Значение параметра.
@@ -74,11 +76,11 @@ def saveParamCFG(sCFGFileName, sParamName, vParamValue):
     new_cfg = None
     try:
         # Файл-источник переименовать в бак файл
-        from . import ic_file
-        bak_cfg_name = ic_file.icChangeExt(sCFGFileName, '.bak')
+        bak_cfg_name = os.path.splitext(sCFGFileName)[0] + '.bak'
+        shutil.copyfile(sCFGFileName, bak_cfg_name)
         
-        old_cfg = open(bak_cfg_name, 'r')   # откуда читать
-        new_cfg = open(sCFGFileName, 'w')   # куда писать
+        old_cfg = open(bak_cfg_name, 'rt')   # откуда читать
+        new_cfg = open(sCFGFileName, 'wt')   # куда писать
         for row in old_cfg.readlines():
             # Разделить запись на имя и значение
             name_value = re.split(r'=', row)
@@ -101,8 +103,7 @@ def saveParamCFG(sCFGFileName, sParamName, vParamValue):
             new_cfg.close()
         if old_cfg:
             old_cfg.close()
-        print((u'ERROR! Save param %s in INI file %s' % (sParamName, sCFGFileName)))
-        raise
+        log.fatal(u'Ошибка сохранения параметра [%s] в INI файл <%s>' % (sParamName, sCFGFileName))
     return False
 
 
@@ -120,16 +121,30 @@ def loadParamINI(sINIFileName, sSection, sParamName):
     """
     try:
         param = None
-        ini_parser = ConfigParser.ConfigParser()
+        ini_parser = configparser.ConfigParser()
         # Прочитать файл
         ini_parser.read(sINIFileName)
-        if ini_parser.has_section(sSection):
+        if ini_parser.has_section(sSection) and ini_parser.has_option(sSection, sParamName):
             param = ini_parser.get(sSection, sParamName)
         return param
     except:
-        print((u'ERROR! Load param %s.%s from CFG file %s' % (sSection, sParamName, sINIFileName)))
-        raise
+        log.fatal(u'Ошибка загрузки параметра [%s.%s] из INI файла <%s>' % (sSection, sParamName, sINIFileName))
     return None
+
+
+def loadParamINIValue(*args, **kwargs):
+    """
+    Чтение параметра из файла настроек.
+    @return: Происходит попытка прееобразование из строки возвращаемого
+        значения к реальному типу по средством <eval>.
+        Если при преобразовании возникла ошибка, то возвращается строка.
+    """
+    param = loadParamINI(*args, **kwargs)
+    try:
+        value = eval(param)
+    except:
+        value = param
+    return value
 
 
 def saveParamINI(sINIFileName, sSection, sParamName, vParamValue):
@@ -146,7 +161,6 @@ def saveParamINI(sINIFileName, sSection, sParamName, vParamValue):
     """
     ini_file = None
     try:
-
         ini_file_name = os.path.split(sINIFileName)
         path = ini_file_name[0]
         file = ini_file_name[1]
@@ -155,35 +169,33 @@ def saveParamINI(sINIFileName, sSection, sParamName, vParamValue):
 
         # Если ини-файла нет, то создать его
         if not os.path.isfile(sINIFileName):
-            ini_file = open(sINIFileName, 'w')
+            ini_file = open(sINIFileName, 'wt')
             ini_file.write('')
             ini_file.close()
-            ini_file = None
-
+            
         # Создать объект конфигурации
-        ini_parser = ConfigParser.ConfigParser()
-        ini_file = open(sINIFileName, 'r')
+        ini_parser = configparser.ConfigParser()
+        ini_file = open(sINIFileName, 'rt')
         ini_parser.readfp(ini_file)
         ini_file.close()
-        ini_file = None
 
         # Если нет такой секции, то создать ее
         if not ini_parser.has_section(sSection):
             ini_parser.add_section(sSection)
 
+        if not isinstance(vParamValue, str):
+            vParamValue = str(vParamValue)
         ini_parser.set(sSection, sParamName, vParamValue)
 
         # Сохранить и закрыть файл
-        ini_file = open(sINIFileName, 'w')
+        ini_file = open(sINIFileName, 'wt')
         ini_parser.write(ini_file)
         ini_file.close()
-        ini_file = None
         return True
     except:
         if ini_file:
             ini_file.close()
-        print((u'ERROR! Save param %s.%s in INI file %s' % (sSection, sParamName, sINIFileName)))
-        raise
+        log.fatal(u'Ошибка сохранения параметра [%s.%s] в INI файл <%s>' % (sSection, sParamName, sINIFileName))
     return False
 
 
@@ -200,38 +212,34 @@ def delParamINI(sINIFileName, sSection, sParamName):
     """
     ini_file = None
     try:
-
         if not os.path.isfile(sINIFileName):
-            print((u'WARNING! INI file %s not exists' % sINIFileName))
+            log.warning(u'INI файл <%s> не найден' % sINIFileName)
             return False
             
         # Создать объект конфигурации
-        ini_parser = ConfigParser.ConfigParser()
-        ini_file = open(sINIFileName, 'r')
+        ini_parser = configparser.ConfigParser()
+        ini_file = open(sINIFileName, 'rt')
         ini_parser.readfp(ini_file)
         ini_file.close()
-        ini_file = None
 
         # Если такой секции нет
         if not ini_parser.has_section(sSection):
-            print((u'WARNING! Section %s not exists in file %s' % (sSection, sINIFileName)))
+            log.warning(u'Секция [%s] не существует в файле <%s>' % (sSection, sINIFileName))
             return False
 
         # Удалить
         ini_parser.remove_option(sSection, sParamName)
 
         # Сохранить и закрыть файл
-        ini_file = open(sINIFileName, 'w')
+        ini_file = open(sINIFileName, 'wt')
         ini_parser.write(ini_file)
         ini_file.close()
-        ini_file = None
 
         return True
     except:
         if ini_file:
             ini_file.close()
-        print((u'ERROR! Delete param %s.%s from INI file %s' % (sSection, sParamName, sINIFileName)))
-        raise
+        log.fatal(u'Ошибка удаления параметра [%s.%s] из INI файла <%s>' % (sSection, sParamName, sINIFileName))
     return False
 
 
@@ -247,27 +255,25 @@ def getParamCountINI(sINIFileName, sSection):
     ini_file = None
     try:
         if not os.path.isfile(sINIFileName):
-            print((u'WARNING! INI file %s not exists' % sINIFileName))
+            log.warning(u'INI файл <%s> не найден' % sINIFileName)
             return 0
             
         # Создать объект конфигурации
-        ini_parser = ConfigParser.ConfigParser()
-        ini_file = open(sINIFileName, 'r')
+        ini_parser = configparser.ConfigParser()
+        ini_file = open(sINIFileName, 'rt')
         ini_parser.readfp(ini_file)
         ini_file.close()
-        ini_file = None
 
         # Если такой секции нет
         if not ini_parser.has_section(sSection):
-            print((u'WARNING! Section %s not exists in file %s' % (sSection, sINIFileName)))
+            log.warning(u'Секция [%s] не существует в файле <%s>' % (sSection, sINIFileName))
             return 0
         # Количество параметров в секции
         return len(ini_parser.options(sSection))
     except:
         if ini_file:
             ini_file.close()
-        print((u'ERROR! INI file: %s Get param count in section %s' % (sINIFileName, sSection)))
-        raise
+        log.fatal(u'INI файл <%s>. Ошибка определения количества параметров секции [%s]' % (sINIFileName, sSection))
     return -1
 
 
@@ -283,27 +289,25 @@ def getParamNamesINI(sINIFileName, sSection):
     ini_file = None
     try:
         if not os.path.isfile(sINIFileName):
-            print((u'WARNING! INI file %s not exists' % sINIFileName))
+            log.warning(u'INI файл <%s> не найден' % sINIFileName)
             return None
             
         # Создать объект конфигурации
-        ini_parser = ConfigParser.ConfigParser()
-        ini_file = open(sINIFileName, 'r')
+        ini_parser = configparser.ConfigParser()
+        ini_file = open(sINIFileName, 'rt')
         ini_parser.readfp(ini_file)
         ini_file.close()
-        ini_file = None
 
         # Если такой секции нет
         if not ini_parser.has_section(sSection):
-            print((u'WARNING! Section %s not exists in file %s' % (sSection, sINIFileName)))
+            log.warning(u'Секция [%s] не существует в файле <%s>' % (sSection, sINIFileName))
             return []
         # Количество параметров в секции
         return ini_parser.options(sSection)
     except:
         if ini_file:
             ini_file.close()
-        print((u'ERROR! INI file: %s Get param names in section %s' % (sINIFileName, sSection)))
-        raise
+        log.fatal(u'INI файл <%s>. Ошибка определения имен параметров секции [%s]' % (sINIFileName, sSection))
     return None
 
 
@@ -317,54 +321,54 @@ def INI2Dict(sINIFileName):
     ini_file = None
     try:
         if not os.path.exists(sINIFileName):
-            print((u'WARNING! INI file %s not exists' % sINIFileName))
+            log.warning(u'INI файл <%s> не существует' % sINIFileName)
             return None
             
         # Создать объект конфигурации
-        ini_parser = ConfigParser.ConfigParser()
-        ini_file = open(sINIFileName, 'r')
+        ini_parser = configparser.ConfigParser()
+        ini_file = open(sINIFileName, 'rt')
         ini_parser.readfp(ini_file)
         ini_file.close()
-        ini_file = None
-
+        
         # Заполнение словаря
-        dct = {}
+        dict = {}
         sections = ini_parser.sections()
         for section in sections:
             params = ini_parser.options(section)
-            dct[section] = {}
+            dict[section] = {}
             for param in params:
                 param_str = ini_parser.get(section, param)
                 try:
-                    # Возможно в виде параметра записан словарь/список/None/число и т.д.
+                    # Возможно в виде параметра записан
+                    # словарь/список/None/число и т.д.
                     param_value = eval(param_str)
                 except:
                     # Нет вроде строка
                     param_value = param_str
-                dct[section][param] = param_value
+                dict[section][param] = param_value
         
-        return dct
+        return dict
     except:
         if ini_file:
             ini_file.close()
-        print((u'ERROR! Conver INI file %s to dictionary' % sINIFileName))
-        raise
+        log.fatal(u'Ошибка преобразования INI файла <%s> в словарь' % sINIFileName)
     return None
 
 
-def Dict2INI(dDict, sINIFileName):
+def Dict2INI(dDict, sINIFileName, rewrite=False):
     """
     Представление/запись словаря в виде INI файла.
     @type dDict: C{dictionary}
     @param dDict: Исходный словарь.
     @type sINIFileName: C{string}
     @param sINIFileName: Полное имя файла настроек.
+    @param rewrite: Переписать полностью существующий INI файл?
     @return: Возвращает результат сохранения True/False.
     """
     ini_file = None
     try:
         if not dDict:
-            print((u'WARNING! Not define dictionary %s' % dDict))
+            log.warning(u'Не определен словарь <%s> для сохранения в INI файле' % dDict)
             return False
 
         ini_file_name = os.path.split(sINIFileName)
@@ -374,18 +378,16 @@ def Dict2INI(dDict, sINIFileName):
             os.makedirs(path)
 
         # Если ини-файла нет, то создать его
-        if not os.path.exists(sINIFileName):
-            ini_file = open(sINIFileName, 'w')
+        if not os.path.exists(sINIFileName) or rewrite:
+            ini_file = open(sINIFileName, 'wt')
             ini_file.write('')
             ini_file.close()
-            ini_file = None
-            
+
         # Создать объект конфигурации
-        ini_parser = ConfigParser.ConfigParser()
-        ini_file = open(sINIFileName, 'r')
+        ini_parser = configparser.ConfigParser()
+        ini_file = open(sINIFileName, 'rt')
         ini_parser.readfp(ini_file)
         ini_file.close()
-        ini_file = None
 
         # Прописать словарь в объекте конфигурации
         for section in dDict.keys():
@@ -399,7 +401,7 @@ def Dict2INI(dDict, sINIFileName):
                 ini_parser.set(section_str, str(param), str(dDict[section][param]))
 
         # Сохранить и закрыть файл
-        ini_file = open(sINIFileName, 'w')
+        ini_file = open(sINIFileName, 'wt')
         ini_parser.write(ini_file)
         ini_file.close()
         
@@ -407,6 +409,5 @@ def Dict2INI(dDict, sINIFileName):
     except:
         if ini_file:
             ini_file.close()
-        print((u'ERROR! Conver dictionary to INI file %s' % sINIFileName))
-        raise
+        log.fatal(u'Ошибка сохранения словаря в INI файле <%s>' % sINIFileName)
     return False

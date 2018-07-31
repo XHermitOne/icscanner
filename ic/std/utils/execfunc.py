@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -8,9 +8,10 @@
 import os
 import sys
 import imp
-from ic.std.log import log
 
-__versiom__ = (0, 0, 1, 1)
+from ..log import log
+
+__versiom__ = (0, 1, 1, 1)
 
 
 def loadSource(name, path):
@@ -90,7 +91,7 @@ def exec_code(sCode='', bReImport=False, name_space=None, kwargs=None):
     if func_mod:
         import_str = 'import ' + func_mod
         try:
-            exec import_str
+            exec(import_str)
         except:
             log.error(u'Import module error <%s>' % import_str)
             raise

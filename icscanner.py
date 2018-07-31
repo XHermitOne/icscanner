@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -66,7 +66,7 @@ from scanner import scanner_dlg
 from scanner import scan_manager
 
 
-__version__ = (0, 2, 1, 1)
+__version__ = (1, 1, 1, 1)
 
 
 def main(argv):
@@ -86,9 +86,9 @@ def main(argv):
                                        'ext_cmd=',
                                        'pack_mode', 'pack_pages=',
                                        'glue', 'max_sheets='])
-    except getopt.error, msg:
-        print(msg)
-        print('For help use --help option')
+    except getopt.error as msg:
+        log.error(str(msg), bForcePrint=True)
+        log.info(__doc__)
         sys.exit(2)
 
     # Инициализоция системы журналирования

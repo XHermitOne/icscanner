@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -35,7 +35,7 @@ from ic import config
 
 from . import ext_scan_dlg
 
-__version__ = (0, 1, 1, 6)
+__version__ = (1, 1, 1, 1)
 
 # Режимы сканирования
 GREY_SCAN_MODE = 'Grey'
@@ -46,7 +46,7 @@ SCAN_MODES = (LINEART_SCAN_MODE, HALFTONE_SCAN_MODE,
               GREY_SCAN_MODE, COLOR_SCAN_MODE)
 
 # Имя файла скана PDF по умолчанию при многостраничном сканировании
-DEFAULT_PDF_SCAN_FILENAME = os.path.join(ic_file.getHomeDir(),
+DEFAULT_PDF_SCAN_FILENAME = os.path.join(ic_file.getHomePath(),
                                          config.PROFILE_DIRNAME,
                                          'scan.pdf')
 
@@ -76,7 +76,7 @@ SCAN_FILE_TYPES = (PDF_FILE_TYPE, JPEG_FILE_TYPE, JPG_FILE_TYPE,
 # Глубина по умолчанию
 DEFAULT_DEPTH = 8
 
-MULTISCAN_PAGE_FILENAME = os.path.join(ic_file.getHomeDir(),
+MULTISCAN_PAGE_FILENAME = os.path.join(ic_file.getHomePath(),
                                        config.PROFILE_DIRNAME,
                                        'page%d.jpg')
 
@@ -348,7 +348,7 @@ class icScanManager(object):
         @return: True/False.
         """
         if image:
-            img_filename = os.path.join(ic_file.getHomeDir(),
+            img_filename = os.path.join(ic_file.getHomePath(),
                                         MULTISCAN_PAGE_FILENAME % n)
             width, height = page_size
             image = image.resize((int(width), int(height)))

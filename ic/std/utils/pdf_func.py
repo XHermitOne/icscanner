@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -170,11 +170,11 @@ import os.path
 import PyPDF2
 
 try:
-    from ic.std.log import log
+    from ..log import log
 except ImportError:
-    from ic.log import log
+    from ic.std.log import log
 
-__version__ = (0, 0, 1, 3)
+__version__ = (0, 1, 1, 1)
 
 
 def glue_pdf_files(out_pdf_filename, *pdf_filenames):

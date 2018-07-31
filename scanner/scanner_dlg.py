@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -11,7 +11,7 @@ import shutil
 import wx
 
 from ic.std.log import log
-from ic.std.utils import ic_ini
+from ic.std.utils import ini
 from ic.std.utils import ic_file
 from ic.std.utils import execfunc
 from ic.std.dlg import dlg
@@ -19,7 +19,7 @@ from ic import config
 from . import scanner_dlg_proto
 from . import scan_manager
 
-__version__ = (0, 2, 1, 1)
+__version__ = (1, 1, 1, 1)
 
 
 class icScanOptions:
@@ -64,7 +64,7 @@ class icScanOptions:
         if sFileName is None:
             sFileName = self.genOptFileName()
 
-        ini_dict = ic_ini.Ini2Dict(sFileName)
+        ini_dict = ini.INI2Dict(sFileName)
         if ini_dict:
             self.setExtOptions(**ini_dict['SCAN_OPTIONS'])
         else:
@@ -93,7 +93,7 @@ class icScanOptions:
         ini_dict['SCAN_OPTIONS']['depth'] = self.depth
         ini_dict['SCAN_OPTIONS']['ext_scan_cmd'] = self.ext_scan_cmd
 
-        ic_ini.Dict2Ini(ini_dict, sFileName)
+        ini.Dict2INI(ini_dict, sFileName)
         
     def setExtOptions(self, **options):
         """

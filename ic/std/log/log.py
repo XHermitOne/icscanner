@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 """
@@ -57,7 +57,7 @@ import stat
 import traceback
 import locale
 
-__version__ = (0, 0, 3, 4)
+__version__ = (0, 1, 1, 1)
 
 # Кодировка коммандной оболочки по умолчанию
 DEFAULT_ENCODING = sys.stdout.encoding if sys.platform.startswith('win') else locale.getpreferredencoding()
@@ -72,10 +72,13 @@ CYAN_COLOR_TEXT = '\x1b[36m'        # cyan
 WHITE_COLOR_TEXT = '\x1b[37m'       # white
 NORMAL_COLOR_TEXT = '\x1b[0m'       # normal
 
+NOT_INIT_LOG_SYS_MSG = u'Не инициализирована система журналирования'
+
 
 def print_color_txt(sTxt, sColor=NORMAL_COLOR_TEXT):
-    if type(sTxt) == unicode:
-        sTxt = sTxt.encode(get_default_encoding())
+    if isinstance(sTxt, str):
+        # sTxt = sTxt.encode(get_default_encoding())
+        pass
     if sys.platform.startswith('win'):
         # Для Windows систем цветовая раскраска отключена
         txt = sTxt
@@ -83,6 +86,7 @@ def print_color_txt(sTxt, sColor=NORMAL_COLOR_TEXT):
         # Добавление цветовой раскраски
         txt = sColor + sTxt + NORMAL_COLOR_TEXT
     print(txt)        
+
 
 # Модуль конфигурации
 CONFIG = None
@@ -128,6 +132,15 @@ def get_log_mode():
     return False
 
 
+def get_log_filename():
+    """
+    Имя файла журнала.
+    @return:
+    """
+    global CONFIG
+    return CONFIG.LOG_FILENAME if CONFIG and hasattr(CONFIG, 'LOG_FILENAME') else None
+
+
 def init(mConfig=None, sLogFileName=None):
     """
     Инициализация файла лога.
@@ -161,7 +174,7 @@ def init(mConfig=None, sLogFileName=None):
                  stat.S_IWOTH | stat.S_IROTH)
 
     if get_debug_mode():
-        print_color_txt('INFO. Init log %s' % sLogFileName, GREEN_COLOR_TEXT)
+        print_color_txt('INFO. Инициализация файла журнала <%s>' % sLogFileName, GREEN_COLOR_TEXT)
 
 
 def debug(sMsg=u'', bForcePrint=False, bForceLog=False):
@@ -179,7 +192,7 @@ def debug(sMsg=u'', bForcePrint=False, bForceLog=False):
         if get_log_mode() or bForceLog:
             logging.debug(sMsg)
     else:
-        print_color_txt('Not init log system.', PURPLE_COLOR_TEXT)
+        print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
         print_color_txt('DEBUG. ' + sMsg, BLUE_COLOR_TEXT)
 
 
@@ -198,7 +211,7 @@ def info(sMsg=u'', bForcePrint=False, bForceLog=False):
         if get_log_mode() or bForceLog:
             logging.info(sMsg)    
     else:
-        print_color_txt('Not init log system.', PURPLE_COLOR_TEXT)
+        print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
         print_color_txt('INFO. ' + sMsg, GREEN_COLOR_TEXT)
 
 
@@ -217,7 +230,7 @@ def error(sMsg=u'', bForcePrint=False, bForceLog=False):
         if get_log_mode() or bForceLog:
             logging.error(sMsg)    
     else:
-        print_color_txt('Not init log system.', PURPLE_COLOR_TEXT)
+        print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
         print_color_txt('ERROR. ' + sMsg, RED_COLOR_TEXT)
 
 
@@ -236,7 +249,7 @@ def warning(sMsg=u'', bForcePrint=False, bForceLog=False):
         if get_log_mode() or bForceLog:
             logging.warning(sMsg)    
     else:
-        print_color_txt('Not init log system.', PURPLE_COLOR_TEXT)
+        print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
         print_color_txt('WARNING. ' + sMsg, YELLOW_COLOR_TEXT)
 
 
@@ -254,10 +267,10 @@ def fatal(sMsg=u'', bForcePrint=False, bForceLog=False):
     try:
         msg = sMsg+u'\n'+trace_txt
     except UnicodeDecodeError:
-        if not isinstance(sMsg, unicode):
-            sMsg = unicode(sMsg, get_default_encoding())
-        if not isinstance(trace_txt, unicode):
-            trace_txt = unicode(trace_txt, get_default_encoding())
+        if not isinstance(sMsg, str):
+            sMsg = str(sMsg)
+        if not isinstance(trace_txt, str):
+            trace_txt = str(trace_txt)
         msg = sMsg+u'\n'+trace_txt
 
     if CONFIG:
@@ -266,5 +279,24 @@ def fatal(sMsg=u'', bForcePrint=False, bForceLog=False):
         if get_log_mode() or bForceLog:
             logging.fatal(msg)
     else:
-        print_color_txt('Not init log system.', PURPLE_COLOR_TEXT)
+        print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
         print_color_txt('FATAL. ' + msg, RED_COLOR_TEXT)
+
+
+def service(sMsg=u'', bForcePrint=False, bForceLog=False):
+    """
+    Вывести СЕРВИСНУЮ информацию.
+    @param sMsg: Текстовое сообщение.
+    @param bForcePrint: Принудительно вывести на экран.
+    @param bForceLog: Принудительно записать в журнале.
+    """
+    global CONFIG
+
+    if CONFIG:
+        if get_debug_mode() or bForcePrint:
+            print_color_txt('SERVICE. ' + sMsg, CYAN_COLOR_TEXT)
+        if get_log_mode() or bForceLog:
+            logging.debug('SERVICE. ' + sMsg)
+    else:
+        print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
+        print_color_txt('SERVICE. ' + sMsg, CYAN_COLOR_TEXT)
