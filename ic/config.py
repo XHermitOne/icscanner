@@ -27,7 +27,7 @@ PROFILE_PATH = os.path.join(os.environ.get('HOME', '/home/user'),
                             PROFILE_DIRNAME)
 
 # Имя файла журнала
-LOG_FILENAME = os.path.join(os.environ.get('HOME', os.path.dirname(__file__)+'/log'),
+LOG_FILENAME = os.path.join(os.environ.get('HOME', os.path.join(os.path.dirname(__file__), 'log')),
                             PROFILE_DIRNAME,
                             'icscanner_%s.log' % datetime.date.today().isoformat())
 

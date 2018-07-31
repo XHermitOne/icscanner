@@ -15,7 +15,8 @@ from ic.std.utils import execfunc
 from ic.std.utils import pdf_func
 from . import scanner_dlg_proto
 
-__version__ = (0, 0, 1, 7)
+
+__version__ = (0, 1, 1, 1)
 
 
 class icLoadSheetsDialog(scanner_dlg_proto.icLoadSheetsDlgProto):

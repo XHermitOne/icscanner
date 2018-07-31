@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: cp1251 -*-
+
 """
 Стандартные пакеты
     log - пакте для работы с файлами лога
@@ -7,6 +8,4 @@
     bitmap - работа с bitmap        
 """
 
-# ic series version number
-# (note that subpackages have their own version number)
-__version__ = (0, 0, 1, 2)
+__version__ = (0, 1, 1, 1)

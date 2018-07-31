@@ -12,6 +12,8 @@ import wx
 
 from ic.std.log import log
 
+__version__ = (0, 1, 1, 1)
+
 
 def getImageFileType(img_filename):
     """
@@ -19,7 +21,7 @@ def getImageFileType(img_filename):
     @param img_filename: Полное имя файла.
     """
     if img_filename == '' or not os.path.exists(img_filename):
-        log.warning('File <%s> not found' % img_filename)
+        log.warning(u'Файл <%s> не найден' % img_filename)
         return None
 
     try:
@@ -44,9 +46,9 @@ def getImageFileType(img_filename):
         elif ext == 'XPM':
             return wx.BITMAP_TYPE_XPM
         else:
-            log.warning('Not support image file type <%s>' % ext)
+            log.warning('Не поддерживаемы тип файла образа <%s>' % ext)
     except:
-        log.error('Get image file type')
+        log.fatal('Ошибка определения типа файла образа')
 
     return None
 
@@ -63,17 +65,17 @@ def createBitmap(img_filename, bMakeMask=False):
         # Преобразовать относительные пути в абсолютные
         img_filename = os.path.abspath(os.path.normpath(img_filename))
         if not img_filename or not os.path.exists(img_filename):
-            log.warning('File <%s> not found' % img_filename)
+            log.warning('Файл <%s> не найден' % img_filename)
             return None
 
         bmp = wx.Bitmap(img_filename,getImageFileType(img_filename))
         if bMakeMask:
             # Создать маску и присоединить ее к битмапу
             phone_colour = wx.CYAN
-            bmp.SetMask(wx.MaskColour(bmp, phone_colour))
+            bmp.SetMask(wx.Colour(bmp, phone_colour))
         return bmp
     except:
-        log.error(u'Ошибка создания образа файла <%s>' % img_filename)
+        log.fatal(u'Ошибка создания образа файла <%s>' % img_filename)
         return None
 
 
@@ -97,5 +99,5 @@ def createEmptyBitmap(width, height, colour):
         dc.SelectObject(wx.NullBitmap)
         return bmp
     except:
-        log.error('Create empty bitmap SIZE: <%s, %s> COLOUR: <%s>' % (wodth, height, colour))
+        log.fatal('Create empty bitmap SIZE: <%s, %s> COLOUR: <%s>' % (width, height, colour))
         return None
