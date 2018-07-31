@@ -494,21 +494,21 @@ class icScannerDlg(scanner_dlg_proto.icScannerDlgProto,
 
         img_filename = os.path.normpath(os.path.join(os.path.dirname(__file__), u'img', u'scanner.png'))
         option_notebookBitmap = wx.Bitmap(img_filename, wx.BITMAP_TYPE_ANY)
-        if option_notebookBitmap.Ok():
+        if option_notebookBitmap.IsOk():
             option_notebookImages.Add(option_notebookBitmap)
             self.option_notebook.SetPageImage(option_notebookIndex, option_notebookIndex)
             option_notebookIndex += 1
 
         img_filename = os.path.normpath(os.path.join(os.path.dirname(__file__), u'img', u'document_spacing.png'))
         option_notebookBitmap = wx.Bitmap(img_filename, wx.BITMAP_TYPE_ANY)
-        if option_notebookBitmap.Ok():
+        if option_notebookBitmap.IsOk():
             option_notebookImages.Add(option_notebookBitmap)
             self.option_notebook.SetPageImage(option_notebookIndex, option_notebookIndex)
             option_notebookIndex += 1
 
         img_filename = os.path.normpath(os.path.join(os.path.dirname(__file__), u'img', u'property-blue.png'))
         option_notebookBitmap = wx.Bitmap(img_filename, wx.BITMAP_TYPE_ANY)
-        if option_notebookBitmap.Ok():
+        if option_notebookBitmap.IsOk():
             option_notebookImages.Add(option_notebookBitmap)
             self.option_notebook.SetPageImage(option_notebookIndex, option_notebookIndex)
             option_notebookIndex += 1

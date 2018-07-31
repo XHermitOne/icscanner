@@ -42,7 +42,7 @@ class icScannerDlgProto ( wx.Dialog ):
 		
 		bSizer9.Add( self.m_staticText8, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.scanner_comboBox = wx.adv.BitmapComboBox( self.option_panel, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, "", wx.CB_READONLY )
+		self.scanner_comboBox = wx.adv.BitmapComboBox( parent=self.option_panel, id=wx.ID_ANY, name=wx.EmptyString, pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.CB_READONLY )
 		self.scanner_comboBox.SetFont( wx.Font( 14, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer9.Add( self.scanner_comboBox, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, 5 )
@@ -58,7 +58,7 @@ class icScannerDlgProto ( wx.Dialog ):
 		
 		bSizer5.Add( self.m_staticText1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.source_comboBox = wx.adv.BitmapComboBox( self.option_panel, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.DefaultSize, "", wx.CB_READONLY )
+		self.source_comboBox = wx.adv.BitmapComboBox( parent=self.option_panel, id=wx.ID_ANY, name=u"Combo!", pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.CB_READONLY )
 		self.source_comboBox.SetSelection( 0 )
 		self.source_comboBox.SetFont( wx.Font( 14, 70, 90, 90, False, wx.EmptyString ) )
 		
@@ -75,7 +75,7 @@ class icScannerDlgProto ( wx.Dialog ):
 		
 		bSizer17.Add( self.m_staticText14, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.mode_comboBox = wx.adv.BitmapComboBox( self.option_panel, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.DefaultSize, "", wx.CB_READONLY )
+		self.mode_comboBox = wx.adv.BitmapComboBox( parent=self.option_panel, id=wx.ID_ANY, name=u"Combo!", pos=wx.DefaultPosition, size=wx.DefaultSize, style=wx.CB_READONLY )
 		self.mode_comboBox.SetFont( wx.Font( 14, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer17.Add( self.mode_comboBox, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.EXPAND, 5 )
@@ -119,7 +119,7 @@ class icScannerDlgProto ( wx.Dialog ):
 		
 		bSizer61.Add( self.m_staticText61, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.pagesize_comboBox = wx.adv.BitmapComboBox( self.area_panel, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 100,-1 ), "", wx.CB_READONLY )
+		self.pagesize_comboBox = wx.adv.BitmapComboBox( parent=self.area_panel, id=wx.ID_ANY, name=u"Combo!", pos=wx.DefaultPosition, size=wx.Size( 100,-1 ), style=wx.CB_READONLY )
 		self.pagesize_comboBox.SetSelection( 0 )
 		self.pagesize_comboBox.SetFont( wx.Font( 14, 70, 90, 90, False, wx.EmptyString ) )
 		
@@ -230,7 +230,7 @@ class icScannerDlgProto ( wx.Dialog ):
 		
 		bSizer6.Add( self.m_staticText6, 1, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 		
-		self.fileext_comboBox = wx.adv.BitmapComboBox( self.extend_panel, wx.ID_ANY, u"Combo!", wx.DefaultPosition, wx.Size( 100,-1 ), "", wx.CB_READONLY )
+		self.fileext_comboBox = wx.adv.BitmapComboBox( parent=self.extend_panel, id=wx.ID_ANY, name=u"Combo!", pos=wx.DefaultPosition, size=wx.Size( 100,-1 ), style=wx.CB_READONLY )
 		self.fileext_comboBox.SetSelection( 0 )
 		self.fileext_comboBox.SetFont( wx.Font( 14, 70, 90, 90, False, wx.EmptyString ) )
 		
