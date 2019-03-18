@@ -9,18 +9,19 @@
 import wx
 import os
 import os.path
+import tempfile
 import shutil   # Для реализации высокоуровневых функций работы с файлами
 import sys
 import time
 import glob     # Для поиска файлов по маске/шаблону
 import platform
 
-from ..log import log
-from ..dlg import dlg
+from ic.log import log
+from ic.dlg import ic_dlg
 
 import ic.config
 
-__version__ = (1, 1, 1, 1)
+__version__ = (1, 1, 1, 2)
 
 _ = wx.GetTranslation
 
@@ -37,10 +38,11 @@ def GetMakeFileTime(FileName_):
 
 def MakeDirs(Path_):
     """
-    Создает каталоги и не ругается.
+    Корректное создание каталогов по цепочке.
     """
     try:
-        return os.makedirs(Path_)
+        if not os.path.exists(Path_):
+            return os.makedirs(Path_)
     except:
         log.fatal(u'Ошибка создания каталога <%s>' % Path_)
 
@@ -76,20 +78,27 @@ def icCopyFile(FileName_, NewFileName_, Rewrite_=True):
     """
     try:
         # --- Проверка существования файла-источника ---
-        if not os.path.isfile(FileName_):
-            dlg.getWarningBox(u'ОШИБКА', u'Файл <%s> не существует.' % FileName_)
+        if not os.path.exists(FileName_):
+            msg = u'Копирование <%s> -> <%s>. Файл <%s> не существует.' % (FileName_, NewFileName_, FileName_)
+            log.warning(msg)
+            ic_dlg.icWarningBox(u'ОШИБКА', msg)
             return False
+
+        MakeDirs(os.path.dirname(NewFileName_))
+
         # --- Проверка перезаписи уже существуещего файла ---
         # Выводить сообщение что файл уже существует?
         if not Rewrite_:
             # Файл уже существует?
-            if os.path.isfile(NewFileName_):
-                if dlg.getAskBox(u'КОПИРВАНИЕ',
-                                 u'Файл <%s> уже существует. Переписать?' % NewFileName_) == wx.NO:
+            if os.path.exists(NewFileName_):
+                if ic_dlg.icAskDlg(u'КОПИРВАНИЕ',
+                                   u'Файл <%s> уже существует. Переписать?' % NewFileName_) == wx.NO:
                     return False
+        else:
+            if os.path.exists(NewFileName_):
+                os.remove(NewFileName_)
 
         # --- Реализация копирования файла ---
-        MakeDirs(os.path.dirname(NewFileName_))
         if os.path.exists(FileName_) and os.path.exists(NewFileName_) and os.path.samefile(FileName_, NewFileName_):
             log.warning(u'Попытка скопировать файл <%s> самого в себя' % FileName_)
         else:
@@ -244,24 +253,40 @@ def getFileExt(FileName_):
     return os.path.splitext(FileName_)[1]
 
 
-def icRelativePath(Path_):
+def get_current_dir():
+    """
+    Текущая папка.
+    Относительнай путь считается от папки defis.
+    @return:
+    """
+    cur_dir = os.path.dirname(os.path.dirname(ic.config.__file__))
+    log.debug(u'Текущая папка определена как <%s>' % cur_dir)
+    return cur_dir
+
+
+def getRelativePath(Path_):
     """
     Относительный путь.
+    Относительнай путь считается от папки defis.
     @param Path_: Путь.
     """
-    Path_ = Path_.replace('\\', '/')
-    cur_dir = os.getcwd()
-    return Path_.replace(cur_dir, './').strip()
+    Path_ = os.path.normpath(Path_)
+    cur_dir = get_current_dir()
+    return Path_.replace(cur_dir, '.').strip()
 
 
-def icAbsolutePath(Path_):
+def getAbsolutePath(Path_):
     """
     Абсолютный путь.
     @param Path_: Путь.
     """
     try:
-        Path_ = os.path.abspath(Path_)
-        Path_ = Path_.replace('\\', '/').lower().strip()
+        cur_dir = get_current_dir()
+        if Path_.startswith('..'):
+            Path_ = os.path.join(os.path.dirname(cur_dir), Path_[2+len(os.path.sep):])
+        elif Path_.startswith('.'):
+            Path_ = os.path.join(cur_dir, Path_[1+len(os.path.sep):])
+        Path_ = os.path.normpath(Path_)
         return Path_
     except:
         log.fatal(u'Ошибка определения абсолютного пути <%s>' % Path_)
@@ -312,8 +337,13 @@ def AbsolutePath(sPath, sCurDir=None):
     @param sCurDir: Текущий путь.
     """
     try:
+        if not sPath:
+            log.error(u'Не определен путь для приведения к абсолютному виду')
+            return None
+
         # Нормализация текущего пути
         sCurDir = getCurDirPrj(sCurDir)
+
         # Коррекция самого пути
         sPath = os.path.abspath(sPath.replace('./', sCurDir).strip())
         return sPath
@@ -337,7 +367,7 @@ def PathFile(Path_, File_):
 
     Path_ = os.path.normpath(Path_)
     File_ = os.path.normpath(File_)
-    relative_path = icRelativePath(Path_)
+    relative_path = getRelativePath(Path_)
     # Этот путь уже присутствует в имени файла
     if File_.find(Path_) != -1 or File_.find(relative_path) != -1:
         return File_
@@ -598,7 +628,7 @@ def getTempFileName(Prefix_=None):
     """
     Генерируемое имя временного файла
     """
-    return os.tempnam(getTempDir(), Prefix_)
+    return tempfile.mkdtemp(getTempDir(), Prefix_)
 
 
 def getHomePath():
@@ -644,8 +674,9 @@ def getPrjProfilePath(bAutoCreatePath=True):
     @return: Путь до ~/.defis/имя_проекта/
     """
     profile_path = getProfilePath(bAutoCreatePath)
+    from ic.engine import ic_user
 
-    prj_name = 'scanner'
+    prj_name = ic_user.getPrjName()
     if prj_name:
         prj_profile_path = os.path.join(profile_path, prj_name)
     else:
@@ -667,6 +698,7 @@ def getProjectDir():
     Папка проекта.
     @return: Папка проекта.
     """
+    from ic.engine import ic_user
     return ic_user.getPrjDir()
 
 

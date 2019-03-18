@@ -53,11 +53,12 @@ import sys
 import logging
 import os
 import os.path
+import tempfile
 import stat
 import traceback
 import locale
 
-__version__ = (0, 1, 1, 1)
+__version__ = (0, 1, 1, 2)
 
 # Кодировка коммандной оболочки по умолчанию
 DEFAULT_ENCODING = sys.stdout.encoding if sys.platform.startswith('win') else locale.getpreferredencoding()
@@ -73,6 +74,8 @@ WHITE_COLOR_TEXT = '\x1b[37m'       # white
 NORMAL_COLOR_TEXT = '\x1b[0m'       # normal
 
 NOT_INIT_LOG_SYS_MSG = u'Не инициализирована система журналирования'
+
+LOG_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
 
 def print_color_txt(sTxt, sColor=NORMAL_COLOR_TEXT):
@@ -153,7 +156,7 @@ def init(mConfig=None, sLogFileName=None):
         return
     
     if sLogFileName is None:
-        sLogFileName = CONFIG.LOG_FILENAME if hasattr(CONFIG, 'LOG_FILENAME') else os.tmpnam()
+        sLogFileName = CONFIG.LOG_FILENAME if hasattr(CONFIG, 'LOG_FILENAME') else tempfile.mktemp()
         
     # Создать папку логов если она отсутствует
     log_dirname = os.path.normpath(os.path.dirname(sLogFileName))
@@ -162,7 +165,7 @@ def init(mConfig=None, sLogFileName=None):
         
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)s %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',
+                        datefmt=LOG_DATETIME_FMT,
                         filename=sLogFileName,
                         filemode='a')
     # ВНИМАНИЕ! сразу выставить права для записи/чтения для всех
