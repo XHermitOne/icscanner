@@ -19,7 +19,7 @@ from ic import config
 from . import scanner_dlg_proto
 from . import scan_manager
 
-__version__ = (1, 1, 1, 1)
+__version__ = (1, 1, 2, 1)
 
 
 class icScanOptions:
@@ -153,6 +153,18 @@ class icScanAdministrator(icScanOptions):
         return None
 
     def runScan(self):
+        """
+        Запусть процесс сканирования,
+        согласно выставленным параметрам.
+        @return: True/False
+        """
+        try:
+            return self._runScan()
+        except:
+            log.fatal(u'Ошибка сканирования')
+        return False
+            
+    def _runScan(self):
         """
         Запусть процесс сканирования,
         согласно выставленным параметрам.

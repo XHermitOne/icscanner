@@ -16,12 +16,12 @@ import time
 import glob     # Для поиска файлов по маске/шаблону
 import platform
 
-from ic.log import log
-from ic.dlg import ic_dlg
+from ic.std.log import log
+from ic.std.dlg import dlg
 
 import ic.config
 
-__version__ = (1, 1, 1, 2)
+__version__ = (1, 1, 2, 2)
 
 _ = wx.GetTranslation
 
@@ -81,7 +81,7 @@ def icCopyFile(FileName_, NewFileName_, Rewrite_=True):
         if not os.path.exists(FileName_):
             msg = u'Копирование <%s> -> <%s>. Файл <%s> не существует.' % (FileName_, NewFileName_, FileName_)
             log.warning(msg)
-            ic_dlg.icWarningBox(u'ОШИБКА', msg)
+            dlg.getWarningBox(u'ОШИБКА', msg)
             return False
 
         MakeDirs(os.path.dirname(NewFileName_))
@@ -91,7 +91,7 @@ def icCopyFile(FileName_, NewFileName_, Rewrite_=True):
         if not Rewrite_:
             # Файл уже существует?
             if os.path.exists(NewFileName_):
-                if ic_dlg.icAskDlg(u'КОПИРВАНИЕ',
+                if dlg.getAskDlg(u'КОПИРВАНИЕ',
                                    u'Файл <%s> уже существует. Переписать?' % NewFileName_) == wx.NO:
                     return False
         else:
@@ -710,3 +710,14 @@ def getRootProjectDir():
     prj_dir = getProjectDir()
     return os.path.dirname(prj_dir)
 
+def getHomeDir():
+    """
+    Папка HOME.
+    """
+    if sys.platform[:3].lower() == 'win':
+        home_dir = os.environ['HOMEDRIVE']+os.environ['HOMEPATH']
+        home_dir = home_dir.replace('\\', '/')
+    else:
+        home_dir = os.environ['HOME']
+    return home_dir
+    
