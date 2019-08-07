@@ -19,7 +19,7 @@ from ic import config
 from . import scanner_dlg_proto
 from . import scan_manager
 
-__version__ = (1, 1, 2, 1)
+__version__ = (1, 1, 2, 2)
 
 
 class icScanOptions:
@@ -600,18 +600,18 @@ class icScannerDlg(scanner_dlg_proto.icScannerDlgProto,
         Считать с контролов параметры сканирования.
         """
         self.scanner = self.scanner_comboBox.GetStringSelection()
-        self.scan_source = scan_manager.SCAN_SOURCES[self.source_comboBox.GetCurrentSelection()]
-        self.scan_mode = scan_manager.SCAN_MODES[self.mode_comboBox.GetCurrentSelection()]
+        self.scan_source = scan_manager.SCAN_SOURCES[self.source_comboBox.GetSelection()]
+        self.scan_mode = scan_manager.SCAN_MODES[self.mode_comboBox.GetSelection()]
         self.is_multi_scan = self.multiscan_checkBox.IsChecked()
         self.is_preview = self.preview_checkBox.IsChecked()
-        self.page_size = scan_manager.SCAN_PAGE_SIZES[self.pagesize_comboBox.GetCurrentSelection()]
+        self.page_size = scan_manager.SCAN_PAGE_SIZES[self.pagesize_comboBox.GetSelection()]
         self.scan_area = (self.left_spinCtrl.GetValue(),
                           self.top_spinCtrl.GetValue(),
                           self.right_spinCtrl.GetValue(),
                           self.bottom_spinCtrl.GetValue())
         self.scan_dir = self.scan_dirPicker.GetPath()
         self.scan_filename = self.filename_textCtrl.GetValue()
-        self.scan_filetype = scan_manager.SCAN_FILE_TYPES[self.fileext_comboBox.GetCurrentSelection()]
+        self.scan_filetype = scan_manager.SCAN_FILE_TYPES[self.fileext_comboBox.GetSelection()]
         self.depth = self.depth_spinCtrl.GetValue()
         self.ext_scan_cmd = self.extern_cmd_textCtrl.GetValue()
 
