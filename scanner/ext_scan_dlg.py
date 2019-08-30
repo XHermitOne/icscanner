@@ -10,9 +10,9 @@ import os.path
 import wx
 
 from ic.std.log import log
-from ic.std.dlg import dlg
+from ic.std.dlg import dlgfunc
 from ic.std.utils import execfunc
-from ic.std.utils import pdf_func
+from ic.std.utils import pdffunc
 from . import scanner_dlg_proto
 
 
@@ -170,7 +170,7 @@ def scan_glue_mode(scan_manager, scan_filename, n_sheets, is_duplex=False, max_t
         # Если используется дуплекс, то надо увеличить количество страниц
         scan_n_pages = sheets * 2 if is_duplex else sheets
         # Запуск процесса сканирования
-        scan_result = scan_manager.multiScan(new_scan_filename, scan_n_pages)
+        scan_result = scan_manager.scanMulti(new_scan_filename, scan_n_pages)
         if scan_result and os.path.exists(new_scan_filename):
             verify_result = scan_glue_verify(None, new_scan_filename)
             if verify_result:
@@ -207,10 +207,10 @@ def scan_glue_mode(scan_manager, scan_filename, n_sheets, is_duplex=False, max_t
     if not is_cancel:
         part_pdf_filenames = [scan_file_path + ('_part%03d' % i_part) + scan_file_ext for i_part in range(1, n_part)]
         log.debug(u'Объединение %d частей скана %s в PDF файл %s' % (n_part-1, part_pdf_filenames, scan_filename))
-        glue_result = pdf_func.glue_pdf_files(scan_filename, *part_pdf_filenames)
+        glue_result = pdffunc.glue_pdf_files(scan_filename, *part_pdf_filenames)
         
-        dlg.getMsgBox(u'СКАНИРОВАНИЕ', 
-                      u'Загрузите в лоток сканера документы для последующего сканирования')
+        dlgfunc.getMsgBox(u'СКАНИРОВАНИЕ',
+                          u'Загрузите в лоток сканера документы для последующего сканирования')
         return glue_result
     else:
         log.warning(u'Режим объединения сканированного документа по частям отменен')

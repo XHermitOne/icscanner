@@ -9,6 +9,8 @@ import datetime
 import wx
 from . import std_dialogs_proto
 
+__version__ = (0, 1, 1, 1)
+
 
 class icYearDialog(std_dialogs_proto.yearDialogProto):
     """

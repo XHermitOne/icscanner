@@ -9,7 +9,7 @@ import datetime
 import wx
 from . import std_dialogs_proto
 
-__version__ = (0, 0, 1, 2)
+__version__ = (0, 1, 1, 1)
 
 TODAY = datetime.date.today()
 

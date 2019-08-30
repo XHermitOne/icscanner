@@ -58,7 +58,7 @@ import stat
 import traceback
 import locale
 
-__version__ = (0, 1, 1, 2)
+__version__ = (0, 1, 2, 1)
 
 # Кодировка коммандной оболочки по умолчанию
 DEFAULT_ENCODING = sys.stdout.encoding if sys.platform.startswith('win') else locale.getpreferredencoding()
@@ -78,16 +78,16 @@ NOT_INIT_LOG_SYS_MSG = u'Не инициализирована система ж
 LOG_DATETIME_FMT = '%Y-%m-%d %H:%M:%S'
 
 
-def print_color_txt(sTxt, sColor=NORMAL_COLOR_TEXT):
-    if isinstance(sTxt, str):
-        # sTxt = sTxt.encode(get_default_encoding())
+def print_color_txt(text, color=NORMAL_COLOR_TEXT):
+    if isinstance(text, str):
+        # text = text.encode(get_default_encoding())
         pass
     if sys.platform.startswith('win'):
         # Для Windows систем цветовая раскраска отключена
-        txt = sTxt
+        txt = text
     else:
         # Добавление цветовой раскраски
-        txt = sColor + sTxt + NORMAL_COLOR_TEXT
+        txt = color + text + NORMAL_COLOR_TEXT
     print(txt)        
 
 
@@ -144,46 +144,47 @@ def get_log_filename():
     return CONFIG.LOG_FILENAME if CONFIG and hasattr(CONFIG, 'LOG_FILENAME') else None
 
 
-def init(mConfig=None, sLogFileName=None):
+def init(config_module=None, log_filename=None):
     """
     Инициализация файла лога.
-    @param mConfig: Модуль конфигурации.
+    @param config_module: Модуль конфигурации.
+    @param log_filename: Полное имя файла журнала/лога.
     """
     global CONFIG
-    CONFIG = mConfig
+    CONFIG = config_module
     
     if not get_log_mode():
         return
     
-    if sLogFileName is None:
-        sLogFileName = CONFIG.LOG_FILENAME if hasattr(CONFIG, 'LOG_FILENAME') else tempfile.mktemp()
+    if log_filename is None:
+        log_filename = CONFIG.LOG_FILENAME if hasattr(CONFIG, 'LOG_FILENAME') else tempfile.mktemp()
         
     # Создать папку логов если она отсутствует
-    log_dirname = os.path.normpath(os.path.dirname(sLogFileName))
+    log_dirname = os.path.normpath(os.path.dirname(log_filename))
     if not os.path.exists(log_dirname):
         os.makedirs(log_dirname)
         
     logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(levelname)s %(message)s',
                         datefmt=LOG_DATETIME_FMT,
-                        filename=sLogFileName,
+                        filename=log_filename,
                         filemode='a')
     # ВНИМАНИЕ! сразу выставить права для записи/чтения для всех
     # иначе в ряде случаев может не производится запись в файл и поэтому падать
-    if os.path.exists(sLogFileName):
-        os.chmod(sLogFileName,
+    if os.path.exists(log_filename):
+        os.chmod(log_filename,
                  stat.S_IWUSR | stat.S_IRUSR |
                  stat.S_IWGRP | stat.S_IRGRP |
                  stat.S_IWOTH | stat.S_IROTH)
 
     if get_debug_mode():
-        print_color_txt('INFO. Инициализация файла журнала <%s>' % sLogFileName, GREEN_COLOR_TEXT)
+        print_color_txt('INFO. Инициализация файла журнала <%s>' % log_filename, GREEN_COLOR_TEXT)
 
 
-def debug(sMsg=u'', bForcePrint=False, bForceLog=False):
+def debug(message=u'', bForcePrint=False, bForceLog=False):
     """
     Вывести ОТЛАДОЧНУЮ информацию.
-    @param sMsg: Текстовое сообщение.
+    @param message: Текстовое сообщение.
     @param bForcePrint: Принудительно вывести на экран.
     @param bForceLog: Принудительно записать в журнале.
     """
@@ -191,18 +192,18 @@ def debug(sMsg=u'', bForcePrint=False, bForceLog=False):
     
     if CONFIG:
         if get_debug_mode() or bForcePrint:
-            print_color_txt('DEBUG. '+sMsg, BLUE_COLOR_TEXT)
+            print_color_txt('DEBUG. ' + message, BLUE_COLOR_TEXT)
         if get_log_mode() or bForceLog:
-            logging.debug(sMsg)
+            logging.debug(message)
     else:
         print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
-        print_color_txt('DEBUG. ' + sMsg, BLUE_COLOR_TEXT)
+        print_color_txt('DEBUG. ' + message, BLUE_COLOR_TEXT)
 
 
-def info(sMsg=u'', bForcePrint=False, bForceLog=False):
+def info(message=u'', bForcePrint=False, bForceLog=False):
     """
     Вывести ТЕКСТОВУЮ информацию.
-    @param sMsg: Текстовое сообщение.
+    @param message: Текстовое сообщение.
     @param bForcePrint: Принудительно вывести на экран.
     @param bForceLog: Принудительно записать в журнале.
     """
@@ -210,18 +211,18 @@ def info(sMsg=u'', bForcePrint=False, bForceLog=False):
     
     if CONFIG:
         if get_debug_mode() or bForcePrint:
-            print_color_txt('INFO. '+sMsg, GREEN_COLOR_TEXT)
+            print_color_txt('INFO. '+message, GREEN_COLOR_TEXT)
         if get_log_mode() or bForceLog:
-            logging.info(sMsg)    
+            logging.info(message)    
     else:
         print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
-        print_color_txt('INFO. ' + sMsg, GREEN_COLOR_TEXT)
+        print_color_txt('INFO. ' + message, GREEN_COLOR_TEXT)
 
 
-def error(sMsg=u'', bForcePrint=False, bForceLog=False):
+def error(message=u'', bForcePrint=False, bForceLog=False):
     """
     Вывести ОБЩУЮ информацию.
-    @param sMsg: Текстовое сообщение.
+    @param message: Текстовое сообщение.
     @param bForcePrint: Принудительно вывести на экран.
     @param bForceLog: Принудительно записать в журнале.
     """
@@ -229,18 +230,18 @@ def error(sMsg=u'', bForcePrint=False, bForceLog=False):
     
     if CONFIG:
         if get_debug_mode() or bForcePrint:
-            print_color_txt('ERROR. '+sMsg, RED_COLOR_TEXT)
+            print_color_txt('ERROR. '+message, RED_COLOR_TEXT)
         if get_log_mode() or bForceLog:
-            logging.error(sMsg)    
+            logging.error(message)    
     else:
         print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
-        print_color_txt('ERROR. ' + sMsg, RED_COLOR_TEXT)
+        print_color_txt('ERROR. ' + message, RED_COLOR_TEXT)
 
 
-def warning(sMsg=u'', bForcePrint=False, bForceLog=False):
+def warning(message=u'', bForcePrint=False, bForceLog=False):
     """
     Вывести информацию ОБ ПРЕДУПРЕЖДЕНИИ.
-    @param sMsg: Текстовое сообщение.
+    @param message: Текстовое сообщение.
     @param bForcePrint: Принудительно вывести на экран.
     @param bForceLog: Принудительно записать в журнале.
     """
@@ -248,18 +249,18 @@ def warning(sMsg=u'', bForcePrint=False, bForceLog=False):
     
     if CONFIG:
         if get_debug_mode() or bForcePrint:
-            print_color_txt('WARNING. '+sMsg, YELLOW_COLOR_TEXT)
+            print_color_txt('WARNING. '+message, YELLOW_COLOR_TEXT)
         if get_log_mode() or bForceLog:
-            logging.warning(sMsg)    
+            logging.warning(message)    
     else:
         print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
-        print_color_txt('WARNING. ' + sMsg, YELLOW_COLOR_TEXT)
+        print_color_txt('WARNING. ' + message, YELLOW_COLOR_TEXT)
 
 
-def fatal(sMsg=u'', bForcePrint=False, bForceLog=False):
+def fatal(message=u'', bForcePrint=False, bForceLog=False):
     """
     Вывести информацию ОБ ОШИБКЕ.
-    @param sMsg: Текстовое сообщение.
+    @param message: Текстовое сообщение.
     @param bForcePrint: Принудительно вывести на экран.
     @param bForceLog: Принудительно записать в журнале.
     """
@@ -268,13 +269,13 @@ def fatal(sMsg=u'', bForcePrint=False, bForceLog=False):
     trace_txt = traceback.format_exc()
 
     try:
-        msg = sMsg+u'\n'+trace_txt
+        msg = message+u'\n'+trace_txt
     except UnicodeDecodeError:
-        if not isinstance(sMsg, str):
-            sMsg = str(sMsg)
+        if not isinstance(message, str):
+            message = str(message)
         if not isinstance(trace_txt, str):
             trace_txt = str(trace_txt)
-        msg = sMsg+u'\n'+trace_txt
+        msg = message+u'\n'+trace_txt
 
     if CONFIG:
         if get_debug_mode() or bForcePrint:
@@ -286,10 +287,10 @@ def fatal(sMsg=u'', bForcePrint=False, bForceLog=False):
         print_color_txt('FATAL. ' + msg, RED_COLOR_TEXT)
 
 
-def service(sMsg=u'', bForcePrint=False, bForceLog=False):
+def service(message=u'', bForcePrint=False, bForceLog=False):
     """
     Вывести СЕРВИСНУЮ информацию.
-    @param sMsg: Текстовое сообщение.
+    @param message: Текстовое сообщение.
     @param bForcePrint: Принудительно вывести на экран.
     @param bForceLog: Принудительно записать в журнале.
     """
@@ -297,9 +298,9 @@ def service(sMsg=u'', bForcePrint=False, bForceLog=False):
 
     if CONFIG:
         if get_debug_mode() or bForcePrint:
-            print_color_txt('SERVICE. ' + sMsg, CYAN_COLOR_TEXT)
+            print_color_txt('SERVICE. ' + message, CYAN_COLOR_TEXT)
         if get_log_mode() or bForceLog:
-            logging.debug('SERVICE. ' + sMsg)
+            logging.debug('SERVICE. ' + message)
     else:
         print_color_txt(NOT_INIT_LOG_SYS_MSG, PURPLE_COLOR_TEXT)
-        print_color_txt('SERVICE. ' + sMsg, CYAN_COLOR_TEXT)
+        print_color_txt('SERVICE. ' + message, CYAN_COLOR_TEXT)

@@ -174,7 +174,7 @@ try:
 except ImportError:
     from ic.std.log import log
 
-__version__ = (0, 1, 1, 1)
+__version__ = (0, 1, 1, 2)
 
 
 def glue_pdf_files(out_pdf_filename, *pdf_filenames):

@@ -171,11 +171,11 @@ def getNSIListDlg(parent=None,
     return selected_code
 
 
-def getStdDlgQueue(*dlgs):
+def getStdDlgQueue(*dialog_dicts):
     """
     Определить очередность вызова диалоговых окон для
     определения параметров запроса отчета.
-    @param dlgs: Список словарей описания вызова диалоговых окон.
+    @param dialog_dicts: Список словарей описания вызова диалоговых окон.
         Вызов диалогового окна - это словарь формата:
         {'key': Ключ результата,
          'func': Функция вызова диалога,
@@ -190,7 +190,7 @@ def getStdDlgQueue(*dlgs):
 
     result = dict()
 
-    for dlg in dlgs:
+    for dlg in dialog_dicts:
         dlg_func = dlg.get('func', None)
         args = dlg.get('args', tuple())
         kwargs = dlg.get('kwargs', dict())

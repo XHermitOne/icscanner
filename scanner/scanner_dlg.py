@@ -11,10 +11,10 @@ import shutil
 import wx
 
 from ic.std.log import log
-from ic.std.utils import ini
-from ic.std.utils import ic_file
+from ic.std.utils import inifunc
+from ic.std.utils import filefunc
 from ic.std.utils import execfunc
-from ic.std.dlg import dlg
+from ic.std.dlg import dlgfunc
 from ic import config
 from . import scanner_dlg_proto
 from . import scan_manager
@@ -56,27 +56,27 @@ class icScanOptions:
             self.opt_filename = config.DEFAULT_OPTIONS_FILENAME
         return self.opt_filename
 
-    def loadOptions(self, sFileName=None):
+    def loadOptions(self, filename=None):
         """
         Загрузить параметры сканирования из конфигурационного файла.
-        @param sFileName: Имя файла параметров.
+        @param filename: Имя файла параметров.
         """
-        if sFileName is None:
-            sFileName = self.genOptFileName()
+        if filename is None:
+            filename = self.genOptFileName()
 
-        ini_dict = ini.INI2Dict(sFileName)
+        ini_dict = inifunc.INI2Dict(filename)
         if ini_dict:
             self.setExtOptions(**ini_dict['SCAN_OPTIONS'])
         else:
             log.warning(u'Параметры сканирования не загружены из конфигурационного файла')
 
-    def saveOptions(self, sFileName=None):
+    def saveOptions(self, filename=None):
         """
         Записать параметры сканирования в конфигурационный файл.
-        @param sFileName: Имя файла параметров.
+        @param filename: Имя файла параметров.
         """
-        if sFileName is None:
-            sFileName = self.genOptFileName()
+        if filename is None:
+            filename = self.genOptFileName()
 
         ini_dict = dict()
         ini_dict['SCAN_OPTIONS'] = dict()
@@ -93,7 +93,7 @@ class icScanOptions:
         ini_dict['SCAN_OPTIONS']['depth'] = self.depth
         ini_dict['SCAN_OPTIONS']['ext_scan_cmd'] = self.ext_scan_cmd
 
-        ini.Dict2INI(ini_dict, sFileName)
+        inifunc.Dict2INI(ini_dict, filename)
         
     def setExtOptions(self, **options):
         """
@@ -214,9 +214,9 @@ class icScanAdministrator(icScanOptions):
         self.scan_manager.setScanOptions(**options)
 
         # Определение имени файла сканирования
-        scan_filename = os.path.join(ic_file.getHomeDir(),
+        scan_filename = os.path.join(filefunc.getHomeDir(),
                                      config.PROFILE_DIRNAME,
-                                     self.scan_filename+'.'+self.scan_filetype) if self.scan_filename else config.DEFAULT_SCAN_FILENAME
+                                     self.scan_filename +'.' + self.scan_filetype) if self.scan_filename else config.DEFAULT_SCAN_FILENAME
         if os.path.exists(scan_filename):
             # Удалить старый файл сканирования
             try:
@@ -228,13 +228,13 @@ class icScanAdministrator(icScanOptions):
 
         try:
             if not self.is_multi_scan:
-                result = self.scan_manager.singleScan(scan_filename)
+                result = self.scan_manager.scanSingle(scan_filename)
             else:
-                result = self.scan_manager.multiScan(scan_filename)
+                result = self.scan_manager.scanMulti(scan_filename)
 
             if not result:
                 # Какая-то ошибка сканирования
-                dlg.getErrBox(u'ОШИБКА',
+                dlgfunc.getErrBox(u'ОШИБКА',
                               u'Ошибка сканирования. Проверте листы в лотке сканера')
                 return False
 
@@ -315,9 +315,9 @@ class icScanAdministrator(icScanOptions):
             
         self.scan_manager.setScanOptions(**options)
 
-        scans = [(os.path.join(ic_file.getHomeDir(),
+        scans = [(os.path.join(filefunc.getHomeDir(),
                                config.PROFILE_DIRNAME,
-                               scan_filename+'.'+self.scan_filetype) if scan_filename else config.DEFAULT_SCAN_FILENAME,
+                               scan_filename +'.' + self.scan_filetype) if scan_filename else config.DEFAULT_SCAN_FILENAME,
                   int(n_pages), bool(is_duplex)) for scan_filename, n_pages, is_duplex in scan_filenames]
         for scan_filename, n_pages, is_duplex in scans:
             full_scan_filename = os.path.join(os.environ.get('HOME', '/home/user'),
@@ -351,13 +351,13 @@ class icScanAdministrator(icScanOptions):
 
         return False
 
-    def copyToScanDir(self, scan_filename=None, scan_dir=None, doRemove=True):
+    def copyToScanDir(self, scan_filename=None, scan_dir=None, bDoRemove=True):
         """
         Копировать файл - результат сканирования в папку.
         @param scan_filename: Результирующий файл сканирования.
             Если не указан, то берется файл по умолчанию.
         @param scan_dir: Папка сканирования.
-        @param doRemove: Произвести перенос файла?
+        @param bDoRemove: Произвести перенос файла?
         @return: True/False
         """
         if scan_filename is None:
@@ -384,7 +384,7 @@ class icScanAdministrator(icScanOptions):
             if scan_filename != new_filename:
                 shutil.copyfile(scan_filename, new_filename)
                 log.info(u'Копирование файла <%s> в директорию <%s>' % (scan_filename, scan_dir))
-                if doRemove:
+                if bDoRemove:
                     try:
                         os.remove(scan_filename)
                         log.info(u'Удален файл <%s>' % scan_filename)
@@ -664,10 +664,10 @@ class icScannerDlg(scanner_dlg_proto.icScannerDlgProto,
         self.EndModal(wx.OK)
         event.Skip()
 
-    def initComboBoxScanners(self, sSelectScanner=None):
+    def initComboBoxScanners(self, select_scanner=None):
         """
         Инициализация комбобокса списка сканеров системы.
-        @param sSelectScanner: Какой сканер выбрать после
+        @param select_scanner: Какой сканер выбрать после
             инициализации комбобокса,
             если None то выбирается первый в списке.
         """
@@ -681,7 +681,7 @@ class icScannerDlg(scanner_dlg_proto.icScannerDlgProto,
             for scanner_name in scanner_devices:
 
                 img_filename = os.path.normpath(os.path.join(os.path.dirname(__file__), u'img', u'scanner.png'))
-                if scanner_name == sSelectScanner:
+                if scanner_name == select_scanner:
                     default_select = i
 
                 self.scanner_comboBox.Append(scanner_name, wx.Image.ConvertToBitmap(wx.Image(img_filename)))
@@ -691,7 +691,7 @@ class icScannerDlg(scanner_dlg_proto.icScannerDlgProto,
         else:
             log.warning(u'Не найдены устройства сканирования')
             msg = u'Не найдены устройства сканирования. Проверте включены ли устройства/есть ли с ними соединение.'
-            dlg.getWarningBox(u'ВНИМАНИЕ', msg)
+            dlgfunc.getWarningBox(u'ВНИМАНИЕ', msg)
             try:
                 self.EndModal(wx.ID_CANCEL)
             except:
@@ -740,7 +740,7 @@ def do_scan_dlg(parent=None, options=None, title=None):
         result = dlg_result == wx.ID_OK
     else:
         msg = u'Не найдены устройства сканирования. Проверте включены ли устройства/есть ли с ними соединение.'
-        dlg.getWarningBox(u'ВНИМАНИЕ', msg)
+        dlgfunc.getWarningBox(u'ВНИМАНИЕ', msg)
         result = False
 
     # ВНИМАНИЕ! Необходимо удалять диалоговое окно

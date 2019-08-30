@@ -30,7 +30,7 @@ import wx
 from reportlab.pdfgen import canvas
 
 from ic.std.log import log
-from ic.std.utils import ic_file
+from ic.std.utils import filefunc
 from ic import config
 
 from . import ext_scan_dlg
@@ -46,7 +46,7 @@ SCAN_MODES = (LINEART_SCAN_MODE, HALFTONE_SCAN_MODE,
               GREY_SCAN_MODE, COLOR_SCAN_MODE)
 
 # Имя файла скана PDF по умолчанию при многостраничном сканировании
-DEFAULT_PDF_SCAN_FILENAME = os.path.join(ic_file.getHomePath(),
+DEFAULT_PDF_SCAN_FILENAME = os.path.join(filefunc.getHomePath(),
                                          config.PROFILE_DIRNAME,
                                          'scan.pdf')
 
@@ -76,7 +76,7 @@ SCAN_FILE_TYPES = (PDF_FILE_TYPE, JPEG_FILE_TYPE, JPG_FILE_TYPE,
 # Глубина по умолчанию
 DEFAULT_DEPTH = 8
 
-MULTISCAN_PAGE_FILENAME = os.path.join(ic_file.getHomePath(),
+MULTISCAN_PAGE_FILENAME = os.path.join(filefunc.getHomePath(),
                                        config.PROFILE_DIRNAME,
                                        'page%d.jpg')
 
@@ -316,7 +316,7 @@ class icScanManager(object):
 
         return None
 
-    def singleScan(self, scan_filename=None):
+    def scanSingle(self, scan_filename=None):
         """
         Одностраничное сканирование
         Если вкл. ДУПЛЕКС и выключено многостраничное сканирование,
@@ -330,7 +330,7 @@ class icScanManager(object):
             # Если вкл. ДУПЛЕКС и выключено многостраничное сканирование,
             # то надо отсканировать 1 лист с 2-х сторон
             log.debug(u'Сканирование дуплекс')
-            return self.multiScan(scan_filename, 2)
+            return self.scanMulti(scan_filename, 2)
         # Сканирование одной страницы
         log.debug(u'Одностороннее сканирование')
         self.startScan()
@@ -348,7 +348,7 @@ class icScanManager(object):
         @return: True/False.
         """
         if image:
-            img_filename = os.path.join(ic_file.getHomePath(),
+            img_filename = os.path.join(filefunc.getHomePath(),
                                         MULTISCAN_PAGE_FILENAME % n)
             width, height = page_size
             image = image.resize((int(width), int(height)))
@@ -360,7 +360,7 @@ class icScanManager(object):
             log.warning(u'Ошибка записи сканированой страницы [%d] в PDF файл' % n)
         return False
 
-    def multiScan(self, scan_filename=None, n_page=-1):
+    def scanMulti(self, scan_filename=None, n_page=-1):
         """
         Многостраничное сканирование.
         @param scan_filename: Имя файла скана.
@@ -435,15 +435,15 @@ class icScanManager(object):
 
         try:
             import wx
-            from ic.std.dlg import dlg
+            from ic.std.dlg import dlgfunc
 
             app = wx.GetApp()
             if not app:
                 app = wx.PySimpleApp()
-                dlg.getErrBox(u'ОШИБКА СКАНИРОВАНИЯ', err_msg, parent=None)
+                dlgfunc.getErrBox(u'ОШИБКА СКАНИРОВАНИЯ', err_msg, parent=None)
                 app.MainLoop()
             else:
-                dlg.getErrBox(u'ОШИБКА СКАНИРОВАНИЯ', err_msg, parent=app.GetTopWindow())
+                dlgfunc.getErrBox(u'ОШИБКА СКАНИРОВАНИЯ', err_msg, parent=app.GetTopWindow())
         except:
             # Если не отобразим сообщение об ошибке, то процесс
             # сканирования не должен остановиться
@@ -517,10 +517,10 @@ class icScanManager(object):
         # Вкл./Выкл. 2-стороннее сканирование
         self.setDuplexOption(is_duplex)
         if n_pages == 1:
-            scan_result = self.singleScan(scan_filename)
+            scan_result = self.scanSingle(scan_filename)
             return scan_result
         elif n_pages > 1:
-            scan_result = self.multiScan(scan_filename, n_pages)
+            scan_result = self.scanMulti(scan_filename, n_pages)
             return scan_result
         else:
             log.warning(u'Не корректное количество страниц <%s> в пакетном режиме сканирования' % n_pages)
@@ -557,7 +557,7 @@ def test():
 
     scan_manager.open(devices[0])
     scan_manager.startScan()
-    scan_manager.multiScan('test.pdf')
+    scan_manager.scanMulti('test.pdf')
     scan_manager.close()
 
 

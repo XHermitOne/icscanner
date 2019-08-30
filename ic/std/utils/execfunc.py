@@ -11,7 +11,7 @@ import imp
 
 from ..log import log
 
-__versiom__ = (0, 1, 1, 1)
+__versiom__ = (0, 1, 1, 2)
 
 
 def loadSource(name, path):
@@ -61,11 +61,11 @@ def reLoadSource(name, path=None):
     return loadSource(name, path)
 
 
-def exec_code(sCode='', bReImport=False, name_space=None, kwargs=None):
+def exec_code(code_block='', bReImport=False, name_space=None, kwargs=None):
     """
     Выполнить блок кода.
-    @type sCode: C{string}
-    @param sCode: Блок кода.
+    @type code_block: C{string}
+    @param code_block: Блок кода.
         Блок кода - строка в формате:
             ИмяПакета.ИмяМодуля.ИмяФункции(аргументы).
     @type bReImport: C{bool}
@@ -81,7 +81,7 @@ def exec_code(sCode='', bReImport=False, name_space=None, kwargs=None):
     if name_space is None or not isinstance(name_space, dict):
         name_space = {}
 
-    func_import = sCode.split('(')[0].split('.')
+    func_import = code_block.split('(')[0].split('.')
     func_mod = '.'.join(func_import[:-1])
 
     if bReImport:
@@ -103,13 +103,13 @@ def exec_code(sCode='', bReImport=False, name_space=None, kwargs=None):
         if isinstance(kwargs, dict):
             name_space.update(kwargs)
         else:
-            log.warning(u'Не поддерживаемый тип <%s> дополнительных аргументов функции <%s>' % (type(kwargs), sCode))
+            log.warning(u'Не поддерживаемый тип <%s> дополнительных аргументов функции <%s>' % (type(kwargs), code_block))
 
     # Выполнение функции
     try:
-        result = eval(sCode, globals(), name_space)
+        result = eval(code_block, globals(), name_space)
     except:
-        log.error(u'Execute function error <%s>' % sCode)
+        log.error(u'Execute function error <%s>' % code_block)
         raise
 
     return result

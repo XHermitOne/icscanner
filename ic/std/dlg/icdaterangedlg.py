@@ -7,7 +7,9 @@
 
 import wx
 from . import std_dialogs_proto
-from ic.std.utils import ic_time
+from ic.std.utils import timefunc
+
+__version__ = (0, 1, 1, 1)
 
 
 class icDateRangeDialog(std_dialogs_proto.dateRangeDialogProto):
@@ -28,7 +30,7 @@ class icDateRangeDialog(std_dialogs_proto.dateRangeDialogProto):
 
     def getSelectedDateRangeAsDatetime(self):
         if self._selected_range:
-            return ic_time.wxdate2pydate(self._selected_range[0]), ic_time.wxdate2pydate(self._selected_range[1])
+            return timefunc.wxdate2pydate(self._selected_range[0]), timefunc.wxdate2pydate(self._selected_range[1])
         return None
 
     def onCancelButtonClick(self, event):

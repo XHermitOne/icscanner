@@ -9,6 +9,8 @@ import wx
 import sqlalchemy
 from . import std_dialogs_proto
 
+__version__ = (0, 1, 1, 1)
+
 SQL_TEMPLATE = '''
 SELECT DISTINCT
     %s AS cod,

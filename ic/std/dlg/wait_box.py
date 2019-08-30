@@ -12,7 +12,7 @@ import wx.animate
 import thread
 import time
 
-__version__ = (0, 0, 1, 2)
+__version__ = (0, 1, 1, 2)
 
 # Задержка между кадрами
 FRAME_DELAY = 0.3
@@ -56,15 +56,15 @@ def wait_func(parent, message,
     return wait_result[0]
 
 
-def wait_deco(f):
+def wait_deco(function):
     def func(*arg, **kwarg):
-        return wait_func(arg[0], u'Идет выполнение', f, arg, kwarg)
+        return wait_func(arg[0], u'Идет выполнение', function, arg, kwarg)
     return func
 
 
-def wait_noparentdeco(f):
+def wait_noparentdeco(function):
     def func(*arg, **kwarg):
-        return wait_func(None, u'Идет выполнение', f, arg, kwarg)
+        return wait_func(None, u'Идет выполнение', function, arg, kwarg)
     return func
 
 
